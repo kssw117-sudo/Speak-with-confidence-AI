@@ -9,6 +9,11 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Describe the situation first.' });
   }
 
+  // Проверка кода доступа — единый код на продукт, как у остальных
+  // продуктов Plainwork при прямой продаже через Lava
+  const VALID_CODE = process.env.ACCESS_CODE || '';
+  const hasValidCode = licenseCode && VALID_CODE && licenseCode.trim().toUpperCase() === VALID_CODE.toUpperCase();
+
   // Простая защита от злоупотребления — реальный лимит/проверку кода
   // можно донастроить так же, как у остальных пяти продуктов
   if (situation.length > 2000) {
