@@ -490,6 +490,19 @@ export default function App() {
           )}
         </div>
       )}
+
+      {/* ---------- FOOTER ---------- */}
+      <footer style={{ borderTop: `1px solid ${LINE}`, padding: '32px 24px', marginTop: 60 }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+          <span style={{ fontSize: 12, color: INK_SOFT }}>Powered by Claude &middot; Plainwork by Ksenia</span>
+          <div style={{ display: 'flex', gap: 18 }}>
+            <a href="/terms.html" style={{ fontSize: 12, color: INK_SOFT }}>Terms</a>
+            <a href="/privacy.html" style={{ fontSize: 12, color: INK_SOFT }}>Privacy</a>
+            <a href="/refund.html" style={{ fontSize: 12, color: INK_SOFT }}>Refunds</a>
+            <a href="mailto:kssw117@gmail.com" style={{ fontSize: 12, color: INK_SOFT }}>kssw117@gmail.com</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
