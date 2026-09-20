@@ -98,7 +98,7 @@ const PHRASE_CATEGORIES = [
 
 export default function App() {
   const [page, setPage] = useState('home');
-  const [situation, setSituation] = useState('');
+  const [situation, setSituation] = useState(() => localStorage.getItem('swc_draft_situation') || '');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [cardIndex, setCardIndex] = useState(0);
@@ -126,6 +126,26 @@ export default function App() {
   const [freeTrialUsed, setFreeTrialUsed] = useState(() => localStorage.getItem('swc_free_trial_used') === 'true');
   const [licenseCode, setLicenseCode] = useState('');
   const [licenseError, setLicenseError] = useState('');
+  const [showHelpBubble, setShowHelpBubble] = useState(false);
+
+  // Лёгкий "поп"-звук для открытия/закрытия окошка подсказки — тот же
+  // паттерн, что используется во всех пяти остальных продуктах
+  function playPopSound(opening) {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(opening ? 520 : 380, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(opening ? 780 : 260, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.15);
+    } catch (e) { /* звук не критичен для работы приложения */ }
+  }
 
   function handleUnlock() {
     if (!licenseCode.trim()) { setLicenseError('Please enter a code.'); return; }
@@ -142,6 +162,10 @@ export default function App() {
       return next;
     });
   }
+
+  useEffect(() => {
+    localStorage.setItem('swc_draft_situation', situation);
+  }, [situation]);
 
   useEffect(() => {
     if (!timerRunning || timerSeconds <= 0) return;
@@ -503,6 +527,36 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Плавающая кнопка "нужна помощь" — как на всех остальных продуктах */}
+      <button
+        onClick={() => {
+          playPopSound(!showHelpBubble);
+          setShowHelpBubble(v => !v);
+        }}
+        aria-label="Need help?"
+        style={{
+          position: 'fixed', bottom: 20, right: 20, width: 48, height: 48, borderRadius: '50%',
+          background: SKY, color: '#FFF', border: 'none',
+          cursor: 'pointer', fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 4px 14px rgba(94,168,224,0.4)', zIndex: 50,
+        }}
+      >
+        {showHelpBubble ? '\u2715' : '?'}
+      </button>
+
+      {showHelpBubble && (
+        <div style={{
+          position: 'fixed', bottom: 80, right: 20, width: 290, maxWidth: 'calc(100vw - 40px)',
+          background: '#FFF', borderRadius: 14, padding: 18, boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
+          border: `1px solid ${LINE}`, zIndex: 50,
+        }}>
+          <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 600, color: INK }}>How Speak With Confidence AI works</p>
+          <p style={{ margin: 0, fontSize: 12.5, color: INK_SOFT, lineHeight: 1.55 }}>
+            Describe a conversation you're dreading in Scenario prep, and get talking points, tone coaching, and cultural context. Or skip the wait entirely with the ready-made Phrase library, Prep checklist, and rehearsal timer — no AI needed for those.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
