@@ -1,1 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unlock Speak With Confidence AI</title>
+  <style>
+    body { font-family: 'Inter', -apple-system, sans-serif; background: #FFFFFF; color: #1A1A1E; margin: 0; padding: 0; }
+    .wrap { max-width: 420px; margin: 0 auto; padding: 80px 24px; text-align: center; }
+    .logo { margin-bottom: 20px; }
+    h1 { font-family: Georgia, serif; font-weight: 600; font-size: 24px; margin: 0 0 8px; }
+    p.sub { color: #6B6B72; font-size: 14px; margin: 0 0 32px; }
+    input { width: 100%; padding: 14px 16px; border-radius: 10px; border: 1px solid #E5E7EB; font-size: 15px; margin-bottom: 12px; box-sizing: border-box; text-align: center; letter-spacing: 0.05em; text-transform: uppercase; }
+    button { width: 100%; padding: 14px; border-radius: 10px; border: none; background: #5EA8E0; color: #FFF; font-size: 15px; font-weight: 600; cursor: pointer; }
+    button:hover { background: #3D8AC7; }
+    .error { color: #D64545; font-size: 13px; margin-top: 10px; min-height: 16px; }
+    .success { color: #3D8AC7; font-size: 14px; margin-top: 16px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="logo">
+      <svg width="40" height="40" viewBox="0 0 200 190">
+        <rect x="15" y="15" width="170" height="115" rx="40" fill="#5EA8E0" />
+        <polygon points="55,130 40,165 80,132" fill="#5EA8E0" />
+        <polyline points="65,72 92,100 140,50" stroke="#FFF" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </div>
+    <h1>Unlock your access</h1>
+    <p class="sub">Enter the code from your purchase confirmation.</p>
 
+    <input id="code" type="text" placeholder="ACCESS CODE" autocomplete="off" />
+    <button onclick="unlock()">Unlock</button>
+    <p class="error" id="error"></p>
+    <p class="success" id="success">Unlocked! Redirecting...</p>
+  </div>
+
+  <script>
+    function unlock() {
+      const code = document.getElementById('code').value.trim();
+      const errorEl = document.getElementById('error');
+      const successEl = document.getElementById('success');
+      errorEl.textContent = '';
+
+      if (!code) {
+        errorEl.textContent = 'Please enter a code.';
+        return;
+      }
+
+      // Код не проверяется здесь строго — просто сохраняется и передаётся
+      // серверной функции при каждом запросе, она и сверяет с ACCESS_CODE
+      localStorage.setItem('swc_licenseCode', code);
+      localStorage.setItem('swc_unlocked', 'true');
+      successEl.style.display = 'block';
+      setTimeout(() => { window.location.href = '/'; }, 900);
+    }
+
+    document.getElementById('code').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') unlock();
+    });
+  </script>
+</body>
+</html>
