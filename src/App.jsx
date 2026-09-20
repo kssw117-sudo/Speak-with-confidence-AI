@@ -215,6 +215,13 @@ export default function App() {
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap');
         * { box-sizing: border-box; }
         body { margin: 0; }
+        .premium-card { box-shadow: 0 1px 3px rgba(20,20,30,0.06), 0 8px 24px rgba(20,20,30,0.05); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .premium-card:hover { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(20,20,30,0.08), 0 16px 36px rgba(20,20,30,0.1); }
+        .premium-btn { transition: transform 0.15s ease, box-shadow 0.2s ease; }
+        .premium-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(94,168,224,0.4); }
+        .premium-btn:active:not(:disabled) { transform: scale(0.98); }
+        .shimmer-line { background: linear-gradient(90deg, #F0F3F6 0%, #E3ECF4 50%, #F0F3F6 100%); background-size: 200% 100%; animation: shimmer 1.5s ease-in-out infinite; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
       `}</style>
 
       <header style={{
@@ -249,16 +256,16 @@ export default function App() {
       {page === 'home' && (
         <>
           {/* ---------- HERO ---------- */}
-          <div style={{ background: SKY_PALE, padding: '70px 24px 60px' }}>
+          <div style={{ background: `linear-gradient(180deg, ${SKY_PALE} 0%, #FFFFFF 100%)`, padding: '80px 24px 60px' }}>
             <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
-              <h1 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 40, lineHeight: 1.2, margin: '0 0 16px' }}>
+              <h1 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 48, lineHeight: 1.15, margin: '0 0 18px', letterSpacing: '-0.01em' }}>
                 Not what to write. What to say.
               </h1>
-              <p style={{ fontSize: 16, color: INK_SOFT, maxWidth: 480, margin: '0 auto 28px' }}>
+              <p style={{ fontSize: 16, color: INK_SOFT, maxWidth: 480, margin: '0 auto 32px' }}>
                 Prep for the conversation you're dreading — before you walk in.
               </p>
-              <button onClick={() => setPage('scenario')}
-                style={{ padding: '15px 32px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontSize: 15, fontWeight: 600 }}>
+              <button onClick={() => setPage('scenario')} className="premium-btn"
+                style={{ padding: '15px 32px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontSize: 15, fontWeight: 600, boxShadow: '0 4px 16px rgba(94,168,224,0.35)' }}>
                 Start a scenario &rarr;
               </button>
               <div style={{ display: 'flex', justifyContent: 'center', gap: 36, marginTop: 44, flexWrap: 'wrap' }}>
@@ -271,15 +278,15 @@ export default function App() {
 
           {/* ---------- FEATURES GRID ---------- */}
           <div style={{ maxWidth: 1000, margin: '0 auto', padding: '64px 24px' }}>
-            <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 26, textAlign: 'center', marginBottom: 8 }}>
+            <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 34, textAlign: 'center', marginBottom: 10 }}>
               One tool, every way you prepare
             </h2>
-            <p style={{ textAlign: 'center', color: INK_SOFT, fontSize: 14, marginBottom: 40 }}>
+            <p style={{ textAlign: 'center', color: INK_SOFT, fontSize: 14, marginBottom: 44 }}>
               AI-powered and instant, side by side
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20 }}>
               {FEATURES.map((f, i) => (
-                <div key={i} style={{ padding: 22, borderRadius: 14, border: `1px solid ${LINE}`, background: '#FFF' }}>
+                <div key={i} className="premium-card" style={{ padding: 22, borderRadius: 14, background: '#FFF' }}>
                   <div style={{ width: 30, height: 30, borderRadius: 8, background: SKY_PALE, marginBottom: 12 }} />
                   <div style={{ fontWeight: 600, fontSize: 14.5, marginBottom: 6 }}>{f.title}</div>
                   <div style={{ fontSize: 12.5, color: INK_SOFT, lineHeight: 1.5 }}>{f.body}</div>
@@ -291,12 +298,12 @@ export default function App() {
           {/* ---------- EXAMPLE SCENARIOS ---------- */}
           <div style={{ background: '#FAFBFC', padding: '64px 24px' }}>
             <div style={{ maxWidth: 900, margin: '0 auto' }}>
-              <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 26, textAlign: 'center', marginBottom: 40 }}>
+              <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 34, textAlign: 'center', marginBottom: 44 }}>
                 What it sounds like
               </h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
                 {SCENARIOS.map((s, i) => (
-                  <div key={i} style={{ padding: 24, borderRadius: 14, background: '#FFF', border: `1px solid ${LINE}` }}>
+                  <div key={i} className="premium-card" style={{ padding: 24, borderRadius: 14, background: '#FFF' }}>
                     <div style={{ fontSize: 11, color: SKY_DEEP, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 10 }}>{s.tag}</div>
                     <p style={{ fontSize: 14.5, lineHeight: 1.55, margin: 0, fontStyle: 'italic' }}>&ldquo;{s.line}&rdquo;</p>
                   </div>
@@ -354,15 +361,26 @@ export default function App() {
               <textarea value={situation} onChange={e => setSituation(e.target.value)} rows={4}
                 placeholder="Asking my manager for a raise after a strong quarter, but the company just announced a hiring freeze..."
                 style={{ width: '100%', padding: 16, borderRadius: 12, border: `1px solid ${LINE}`, fontSize: 14.5, resize: 'vertical', marginBottom: 20 }} />
-              <button onClick={handleGenerate} disabled={loading}
-                style={{ padding: '14px 30px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontSize: 14.5, fontWeight: 600, opacity: loading ? 0.6 : 1 }}>
+              <button onClick={handleGenerate} disabled={loading} className="premium-btn"
+                style={{ padding: '14px 30px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontSize: 14.5, fontWeight: 600, opacity: loading ? 0.6 : 1, boxShadow: '0 4px 14px rgba(94,168,224,0.3)' }}>
                 {loading ? 'Preparing...' : unlocked ? 'Get talking points' : 'Get talking points (1 free preview)'}
               </button>
             </>
           )}
+
+          {loading && (
+            <div style={{ marginTop: 48 }}>
+              <div className="shimmer-line" style={{ height: 100, borderRadius: 16, marginBottom: 16 }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div className="shimmer-line" style={{ width: 44, height: 44, borderRadius: '50%' }} />
+                <div className="shimmer-line" style={{ width: 44, height: 44, borderRadius: '50%' }} />
+              </div>
+            </div>
+          )}
+
           {result && result.points && (
             <div style={{ marginTop: 48 }}>
-              <div style={{ background: '#F7FAFC', borderRadius: 16, padding: 32, border: `1px solid ${LINE}`, minHeight: 140 }}>
+              <div className="premium-card" style={{ background: '#F7FAFC', borderRadius: 16, padding: 32, minHeight: 140 }}>
                 <div style={{ fontSize: 12, color: SKY_DEEP, fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{cardIndex + 1} / {result.points.length}</div>
                 <p style={{ fontSize: 17, lineHeight: 1.6, margin: 0 }}>{result.points[cardIndex]}</p>
               </div>
