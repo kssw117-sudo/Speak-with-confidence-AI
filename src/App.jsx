@@ -122,6 +122,18 @@ export default function App() {
   const [timerSeconds, setTimerSeconds] = useState(30);
   const [timerRunning, setTimerRunning] = useState(false);
   const [practiceCount, setPracticeCount] = useState(() => parseInt(localStorage.getItem('swc_practice_count') || '0', 10));
+  const [unlocked, setUnlocked] = useState(() => localStorage.getItem('swc_unlocked') === 'true');
+  const [freeTrialUsed, setFreeTrialUsed] = useState(() => localStorage.getItem('swc_free_trial_used') === 'true');
+  const [licenseCode, setLicenseCode] = useState('');
+  const [licenseError, setLicenseError] = useState('');
+
+  function handleUnlock() {
+    if (!licenseCode.trim()) { setLicenseError('Please enter a code.'); return; }
+    localStorage.setItem('swc_licenseCode', licenseCode.trim());
+    localStorage.setItem('swc_unlocked', 'true');
+    setUnlocked(true);
+    setLicenseError('');
+  }
 
   function toggleCheck(item) {
     setCheckedItems(prev => {
@@ -151,16 +163,21 @@ export default function App() {
 
   async function handleGenerate() {
     if (!situation.trim()) return;
+    if (!unlocked && freeTrialUsed) return; // форма скрыта в этом случае, но на всякий случай
     setLoading(true);
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ situation }),
+        body: JSON.stringify({ situation, licenseCode: localStorage.getItem('swc_licenseCode') || '' }),
       });
       const data = await res.json();
       setResult(data);
       setCardIndex(0);
+      if (!unlocked && !freeTrialUsed) {
+        localStorage.setItem('swc_free_trial_used', 'true');
+        setFreeTrialUsed(true);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -287,13 +304,38 @@ export default function App() {
         <div style={{ maxWidth: 640, margin: '0 auto', padding: '60px 24px' }}>
           <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 26, marginBottom: 8 }}>What's the situation?</h2>
           <p style={{ fontSize: 14, color: INK_SOFT, marginBottom: 24 }}>Describe it in your own words — as messy as it actually is.</p>
-          <textarea value={situation} onChange={e => setSituation(e.target.value)} rows={4}
-            placeholder="Asking my manager for a raise after a strong quarter, but the company just announced a hiring freeze..."
-            style={{ width: '100%', padding: 16, borderRadius: 12, border: `1px solid ${LINE}`, fontSize: 14.5, resize: 'vertical', marginBottom: 20 }} />
-          <button onClick={handleGenerate} disabled={loading}
-            style={{ padding: '14px 30px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontSize: 14.5, fontWeight: 600, opacity: loading ? 0.6 : 1 }}>
-            {loading ? 'Preparing...' : 'Get talking points'}
-          </button>
+
+          {!unlocked && freeTrialUsed ? (
+            <div style={{ padding: 24, borderRadius: 14, background: SKY_PALE, marginBottom: 24 }}>
+              <p style={{ fontSize: 14, fontWeight: 600, margin: '0 0 4px' }}>Free preview used</p>
+              <p style={{ fontSize: 13, color: INK_SOFT, margin: '0 0 16px' }}>Enter your access code to keep preparing scenarios.</p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type="text"
+                  value={licenseCode}
+                  onChange={e => setLicenseCode(e.target.value)}
+                  placeholder="Enter your access code"
+                  style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: `1px solid ${LINE}`, fontSize: 14 }}
+                />
+                <button onClick={handleUnlock}
+                  style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: SKY, color: '#FFF', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>
+                  Unlock
+                </button>
+              </div>
+              {licenseError && <p style={{ color: '#D64545', fontSize: 12.5, marginTop: 8 }}>{licenseError}</p>}
+              <a href="/buy.html" style={{ display: 'block', marginTop: 10, fontSize: 12.5, color: SKY_DEEP }}>No code? Get access</a>
+            </div>
+          ) : (
+            <>
+              <textarea value={situation} onChange={e => setSituation(e.target.value)} rows={4}
+                placeholder="Asking my manager for a raise after a strong quarter, but the company just announced a hiring freeze..."
+                style={{ width: '100%', padding: 16, borderRadius: 12, border: `1px solid ${LINE}`, fontSize: 14.5, resize: 'vertical', marginBottom: 20 }} />
+              <button onClick={handleGenerate} disabled={loading}
+                style={{ padding: '14px 30px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontSize: 14.5, fontWeight: 600, opacity: loading ? 0.6 : 1 }}>
+                {loading ? 'Preparing...' : unlocked ? 'Get talking points' : 'Get talking points (1 free preview)'}
+              </button>
+            </>
+          )}
           {result && result.points && (
             <div style={{ marginTop: 48 }}>
               <div style={{ background: '#F7FAFC', borderRadius: 16, padding: 32, border: `1px solid ${LINE}`, minHeight: 140 }}>
@@ -306,6 +348,19 @@ export default function App() {
                 <button onClick={() => setCardIndex(i => Math.min(result.points.length - 1, i + 1))} disabled={cardIndex === result.points.length - 1}
                   style={{ width: 44, height: 44, borderRadius: '50%', border: `1px solid ${LINE}`, background: '#FFF', cursor: 'pointer', fontSize: 18, opacity: cardIndex === result.points.length - 1 ? 0.3 : 1 }}>&rarr;</button>
               </div>
+
+              {result.toneNote && (
+                <div style={{ marginTop: 24, padding: '16px 18px', borderRadius: 12, background: SKY_PALE }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: SKY_DEEP, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>How it should sound</div>
+                  <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.55 }}>{result.toneNote}</p>
+                </div>
+              )}
+              {result.culturalNote && (
+                <div style={{ marginTop: 12, padding: '16px 18px', borderRadius: 12, border: `1px solid ${LINE}` }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: INK_SOFT, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Cultural context</div>
+                  <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.55, color: INK_SOFT }}>{result.culturalNote}</p>
+                </div>
+              )}
             </div>
           )}
         </div>
