@@ -10,27 +10,56 @@ const BG = '#FFFFFF';
 
 const PAGES = [
   { id: 'home', label: 'Home' },
-  { id: 'scenario', label: 'Scenario prep' },
-  { id: 'library', label: 'Phrase library' },
-  { id: 'checklist', label: 'Prep checklist' },
-  { id: 'phrasebook', label: 'My phrasebook' },
+  { id: 'scenario', label: 'Scenario prep', icon: 'target' },
+  { id: 'library', label: 'Phrase library', icon: 'library' },
+  { id: 'checklist', label: 'Prep checklist', icon: 'check' },
+  { id: 'phrasebook', label: 'My phrasebook', icon: 'notebook' },
 ];
 
 const FEATURES = [
-  { title: 'Scenario prep', body: 'Describe the conversation you\'re dreading, get exact talking points built for it.' },
-  { title: 'Tone coaching', body: 'Not just what to say — where to pause, what to emphasize, how it should sound.' },
-  { title: 'Cultural context', body: 'How direct is too direct, in the country you\'re actually speaking to.' },
-  { title: 'Personal phrasebook', body: 'Save the lines that worked. Build your own arsenal over time.' },
-  { title: 'Phrase library', body: 'Hundreds of ready lines by situation — browse instantly, no generation needed.' },
-  { title: 'Prep checklist', body: 'A structured checklist before you walk in — breathing, key points, posture.' },
-  { title: 'Free voice playback', body: 'Hear any phrase read aloud through your browser, at no extra cost.' },
-  { title: 'Practice tracker', body: 'See how many scenarios you\'ve rehearsed. Simple streaks, no pressure.' },
+  { title: 'Scenario prep', body: 'Describe the conversation you\'re dreading, get exact talking points built for it.', icon: 'target' },
+  { title: 'Tone coaching', body: 'Not just what to say — where to pause, what to emphasize, how it should sound.', icon: 'wave' },
+  { title: 'Cultural context', body: 'How direct is too direct, in the country you\'re actually speaking to.', icon: 'globe' },
+  { title: 'Personal phrasebook', body: 'Save the lines that worked. Build your own arsenal over time.', icon: 'bookmark' },
+  { title: 'Phrase library', body: 'Hundreds of ready lines by situation — browse instantly, no generation needed.', icon: 'library' },
+  { title: 'Prep checklist', body: 'A structured checklist before you walk in — breathing, key points, posture.', icon: 'check' },
+  { title: 'Free voice playback', body: 'Hear any phrase read aloud through your browser, at no extra cost.', icon: 'speaker' },
+  { title: 'Practice tracker', body: 'See how many scenarios you\'ve rehearsed. Simple streaks, no pressure.', icon: 'trend' },
 ];
+
+function FeatureIcon({ type, color, size = 22 }) {
+  const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' };
+  switch (type) {
+    case 'target':
+      return <svg {...common}><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="4" /><circle cx="12" cy="12" r="0.6" fill={color} /></svg>;
+    case 'wave':
+      return <svg {...common}><path d="M3 12h2l2-7 3 14 3-10 2 6h6" /></svg>;
+    case 'globe':
+      return <svg {...common}><circle cx="12" cy="12" r="8.5" /><path d="M3.5 12h17M12 3.5c2.5 2.4 3.8 5.4 3.8 8.5s-1.3 6.1-3.8 8.5c-2.5-2.4-3.8-5.4-3.8-8.5S9.5 5.9 12 3.5z" /></svg>;
+    case 'bookmark':
+      return <svg {...common}><path d="M6 3.5h12v17l-6-4.2-6 4.2v-17z" /></svg>;
+    case 'library':
+      return <svg {...common}><rect x="4" y="4" width="4" height="16" /><rect x="10" y="4" width="4" height="16" /><path d="M17 4.5l4 .9-3.5 15.6-4-.9z" /></svg>;
+    case 'check':
+      return <svg {...common}><rect x="4" y="4" width="16" height="16" rx="3" /><path d="M8 12.5l2.5 2.5L16 9" /></svg>;
+    case 'speaker':
+      return <svg {...common}><path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z" /><path d="M16 9a4.2 4.2 0 010 6M18.5 6.5a8 8 0 010 11" /></svg>;
+    case 'trend':
+      return <svg {...common}><path d="M4 17l5-5 4 4 7-8" /><path d="M15 8h5v5" /></svg>;
+    case 'notebook':
+      return <svg {...common}><rect x="4" y="3.5" width="13" height="17" rx="1.5" /><path d="M7 3.5v17M15 6.5l5 1.5-3 12-5-1.5z" /></svg>;
+    default:
+      return null;
+  }
+}
 
 const SCENARIOS = [
   { tag: 'Salary talk', line: 'I want to start by saying how much I\'ve valued this year — and I\'d like to talk about compensation.' },
   { tag: 'Difficult client', line: 'I hear that this isn\'t working for you. Let\'s figure out exactly where it broke down.' },
   { tag: 'Job interview', line: 'That\'s a fair question — here\'s a moment where I got it wrong, and what I changed after.' },
+  { tag: 'Declining a request', line: 'I can\'t take this on right now without dropping something else — which would you prioritize?' },
+  { tag: 'Networking', line: 'What\'s been the most interesting part of your work lately?' },
+  { tag: 'Giving feedback', line: 'Can I share something I noticed? It\'s meant to help, not criticize.' },
 ];
 
 const FAQS = [
@@ -101,6 +130,7 @@ export default function App() {
   const [situation, setSituation] = useState(() => localStorage.getItem('swc_draft_situation') || '');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [generateError, setGenerateError] = useState('');
   const [cardIndex, setCardIndex] = useState(0);
   const [openFaq, setOpenFaq] = useState(null);
   const [librarySearch, setLibrarySearch] = useState('');
@@ -127,6 +157,7 @@ export default function App() {
   const [licenseCode, setLicenseCode] = useState('');
   const [licenseError, setLicenseError] = useState('');
   const [showHelpBubble, setShowHelpBubble] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Лёгкий "поп"-звук для открытия/закрытия окошка подсказки — тот же
   // паттерн, что используется во всех пяти остальных продуктах
@@ -184,11 +215,51 @@ export default function App() {
     localStorage.setItem('swc_practice_count', String(next));
   }
 
+  // Голосовая отработка — через встроенный в браузер Web Speech API,
+  // работы с сервером или Claude нет, полностью бесплатно
+  const [isListening, setIsListening] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState('');
+  const [voiceError, setVoiceError] = useState('');
+  const recognitionRef = React.useRef(null);
+
+  function toggleVoicePractice() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setVoiceError('Voice recognition isn\'t supported in this browser. Try Chrome or Edge.');
+      return;
+    }
+    if (isListening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+    setVoiceError('');
+    setVoiceTranscript('');
+    const recognition = new SpeechRecognition();
+    recognition.lang = navigator.language || 'en-US';
+    recognition.interimResults = true;
+    recognition.continuous = true;
+    recognition.onresult = (event) => {
+      let transcript = '';
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      setVoiceTranscript(transcript);
+    };
+    recognition.onerror = () => setVoiceError('Could not hear you clearly. Try again in a quieter spot.');
+    recognition.onend = () => {
+      setIsListening(false);
+      logPractice();
+    };
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+  }
 
   async function handleGenerate() {
     if (!situation.trim()) return;
     if (!unlocked && freeTrialUsed) return; // форма скрыта в этом случае, но на всякий случай
     setLoading(true);
+    setGenerateError('');
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -196,6 +267,10 @@ export default function App() {
         body: JSON.stringify({ situation, licenseCode: localStorage.getItem('swc_licenseCode') || '' }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setGenerateError(data.error || 'Something went wrong. Please try again.');
+        return;
+      }
       setResult(data);
       setCardIndex(0);
       if (!unlocked && !freeTrialUsed) {
@@ -203,7 +278,7 @@ export default function App() {
         setFreeTrialUsed(true);
       }
     } catch (e) {
-      console.error(e);
+      setGenerateError('Could not reach the server. Check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -222,6 +297,15 @@ export default function App() {
         .premium-btn:active:not(:disabled) { transform: scale(0.98); }
         .shimmer-line { background: linear-gradient(90deg, #F0F3F6 0%, #E3ECF4 50%, #F0F3F6 100%); background-size: 200% 100%; animation: shimmer 1.5s ease-in-out infinite; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .desktop-nav { display: flex; }
+        .mobile-menu-btn { display: none; }
+        .logo-text { display: inline; }
+        @media (max-width: 720px) {
+          .desktop-nav { display: none; }
+          .mobile-menu-btn { display: flex; }
+          .logo-text { font-size: 14px !important; }
+          header { padding-left: 20px !important; padding-right: 20px !important; }
+        }
       `}</style>
 
       <header style={{
@@ -235,29 +319,60 @@ export default function App() {
             <polygon points="55,130 40,165 80,132" fill={SKY} />
             <polyline points="65,72 92,100 140,50" stroke="#FFF" strokeWidth="16" fill="none" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 17 }}>Speak With Confidence</span>
+          <span className="logo-text" style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 17 }}>Speak With Confidence</span>
         </div>
-        <nav style={{ display: 'flex', gap: 28 }}>
+        <nav className="desktop-nav" style={{ gap: 4 }}>
           {PAGES.slice(1).map(p => (
             <button key={p.id} onClick={() => setPage(p.id)}
               style={{
-                background: 'none', border: 'none', cursor: 'pointer', fontSize: 13.5,
+                background: page === p.id ? SKY_PALE : 'none', border: 'none', cursor: 'pointer', fontSize: 13.5,
                 color: page === p.id ? SKY_DEEP : INK_SOFT,
                 fontWeight: page === p.id ? 600 : 400,
-                borderBottom: page === p.id ? `2px solid ${SKY_DEEP}` : '2px solid transparent',
-                paddingBottom: 4,
+                padding: '9px 16px',
+                borderRadius: 999,
+                whiteSpace: 'nowrap',
+                display: 'flex', alignItems: 'center', gap: 7,
               }}>
+              <FeatureIcon type={p.icon} color={page === p.id ? SKY_DEEP : INK_SOFT} size={16} />
               {p.label}
             </button>
           ))}
         </nav>
+        <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(v => !v)} aria-label="Menu"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', alignItems: 'center', justifyContent: 'center', width: 36, height: 36 }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={INK} strokeWidth="2" strokeLinecap="round">
+            {mobileMenuOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <><path d="M3 6h18" /><path d="M3 12h18" /><path d="M3 18h18" /></>}
+          </svg>
+        </button>
       </header>
+
+      {mobileMenuOpen && (
+        <div style={{ position: 'sticky', top: 65, background: '#FFF', borderBottom: `1px solid ${LINE}`, zIndex: 9, padding: '8px 20px 16px' }}>
+          {PAGES.slice(1).map(p => (
+            <button key={p.id} onClick={() => { setPage(p.id); setMobileMenuOpen(false); }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left',
+                background: page === p.id ? SKY_PALE : 'none', border: 'none', cursor: 'pointer', fontSize: 14.5,
+                color: page === p.id ? SKY_DEEP : INK_SOFT, fontWeight: page === p.id ? 600 : 400,
+                padding: '12px 14px', borderRadius: 10, marginTop: 4,
+              }}>
+              <FeatureIcon type={p.icon} color={page === p.id ? SKY_DEEP : INK_SOFT} size={18} />
+              {p.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {page === 'home' && (
         <>
           {/* ---------- HERO ---------- */}
-          <div style={{ background: `linear-gradient(180deg, ${SKY_PALE} 0%, #FFFFFF 100%)`, padding: '80px 24px 60px' }}>
-            <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
+          <div style={{ background: `linear-gradient(180deg, ${SKY_PALE} 0%, #FFFFFF 100%)`, padding: '80px 24px 60px', position: 'relative', overflow: 'hidden' }}>
+            {/* Мягкие размытые пятна на фоне — для глубины, приём премиальных SaaS-сайтов */}
+            <div style={{ position: 'absolute', top: -80, left: '8%', width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(94,168,224,0.35) 0%, rgba(94,168,224,0) 70%)', filter: 'blur(10px)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', top: -40, right: '10%', width: 220, height: 220, borderRadius: '50%', background: 'radial-gradient(circle, rgba(61,138,199,0.3) 0%, rgba(61,138,199,0) 70%)', filter: 'blur(10px)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', bottom: -60, left: '45%', width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, rgba(94,168,224,0.25) 0%, rgba(94,168,224,0) 70%)', filter: 'blur(10px)', pointerEvents: 'none' }} />
+
+            <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center', position: 'relative' }}>
               <h1 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 48, lineHeight: 1.15, margin: '0 0 18px', letterSpacing: '-0.01em' }}>
                 Not what to write. What to say.
               </h1>
@@ -265,13 +380,47 @@ export default function App() {
                 Prep for the conversation you're dreading — before you walk in.
               </p>
               <button onClick={() => setPage('scenario')} className="premium-btn"
-                style={{ padding: '15px 32px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontSize: 15, fontWeight: 600, boxShadow: '0 4px 16px rgba(94,168,224,0.35)' }}>
+                style={{ padding: '15px 32px', borderRadius: 999, border: 'none', cursor: 'pointer', background: `linear-gradient(135deg, ${SKY} 0%, ${SKY_DEEP} 100%)`, color: '#FFF', fontSize: 15, fontWeight: 600, boxShadow: '0 4px 16px rgba(94,168,224,0.35)' }}>
                 Start a scenario &rarr;
               </button>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 36, marginTop: 44, flexWrap: 'wrap' }}>
-                <div><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 24 }}>8</div><div style={{ fontSize: 12, color: INK_SOFT }}>tools in one</div></div>
-                <div><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 24 }}>No</div><div style={{ fontSize: 12, color: INK_SOFT }}>sign-up needed</div></div>
-                <div><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 24 }}>1</div><div style={{ fontSize: 12, color: INK_SOFT }}>time payment</div></div>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 48, marginTop: 56, flexWrap: 'wrap' }}>
+                <div><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>8</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>tools in one</div></div>
+                <div><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>No</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>sign-up needed</div></div>
+                <div><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>1</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>time payment</div></div>
+              </div>
+
+              {/* ---------- PRODUCT MOCKUP ---------- */}
+              <div style={{ maxWidth: 560, margin: '64px auto 0', textAlign: 'left' }}>
+                <div style={{
+                  borderRadius: 16, background: '#FFF', overflow: 'hidden',
+                  boxShadow: '0 20px 60px rgba(20,20,30,0.14), 0 4px 16px rgba(20,20,30,0.08)',
+                  border: `1px solid ${LINE}`,
+                }}>
+                  {/* "Шапка окна браузера" */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '12px 16px', borderBottom: `1px solid ${LINE}`, background: '#FAFBFC' }}>
+                    <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#FF6159' }} />
+                    <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#FFC02E' }} />
+                    <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#28C93F' }} />
+                    <div style={{ flex: 1, textAlign: 'center', fontSize: 11, color: INK_SOFT, fontFamily: "'IBM Plex Mono', monospace" }}>swc.plainwork.website</div>
+                  </div>
+                  {/* Содержимое — уменьшенная копия результата */}
+                  <div style={{ padding: 24 }}>
+                    <div style={{ fontSize: 10.5, color: INK_SOFT, marginBottom: 6 }}>What's the situation?</div>
+                    <div style={{ fontSize: 12.5, color: INK, padding: '10px 12px', borderRadius: 8, border: `1px solid ${LINE}`, marginBottom: 16, background: '#FAFBFC' }}>
+                      Asking my manager for a raise, but the company just announced a hiring freeze...
+                    </div>
+                    <div style={{ background: SKY_PALE, borderRadius: 12, padding: '16px 18px' }}>
+                      <div style={{ fontSize: 10, color: SKY_DEEP, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>1 / 5</div>
+                      <p style={{ fontSize: 13.5, lineHeight: 1.5, margin: 0, color: INK }}>
+                        "I want to start by saying how much I've valued this year, and I'd like to talk about compensation."
+                      </p>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+                      <div style={{ fontSize: 10.5, color: SKY_DEEP, background: '#FFF', border: `1px solid ${SKY_PALE}`, borderRadius: 999, padding: '4px 10px' }}>How it should sound</div>
+                      <div style={{ fontSize: 10.5, color: INK_SOFT, background: '#FFF', border: `1px solid ${LINE}`, borderRadius: 999, padding: '4px 10px' }}>Cultural context</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -287,7 +436,9 @@ export default function App() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20 }}>
               {FEATURES.map((f, i) => (
                 <div key={i} className="premium-card" style={{ padding: 22, borderRadius: 14, background: '#FFF' }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 8, background: SKY_PALE, marginBottom: 12 }} />
+                  <div style={{ width: 42, height: 42, borderRadius: 10, background: SKY_PALE, marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <FeatureIcon type={f.icon} color={SKY_DEEP} />
+                  </div>
                   <div style={{ fontWeight: 600, fontSize: 14.5, marginBottom: 6 }}>{f.title}</div>
                   <div style={{ fontSize: 12.5, color: INK_SOFT, lineHeight: 1.5 }}>{f.body}</div>
                 </div>
@@ -361,10 +512,11 @@ export default function App() {
               <textarea value={situation} onChange={e => setSituation(e.target.value)} rows={4}
                 placeholder="Asking my manager for a raise after a strong quarter, but the company just announced a hiring freeze..."
                 style={{ width: '100%', padding: 16, borderRadius: 12, border: `1px solid ${LINE}`, fontSize: 14.5, resize: 'vertical', marginBottom: 20 }} />
-              <button onClick={handleGenerate} disabled={loading} className="premium-btn"
-                style={{ padding: '14px 30px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontSize: 14.5, fontWeight: 600, opacity: loading ? 0.6 : 1, boxShadow: '0 4px 14px rgba(94,168,224,0.3)' }}>
+              <button onClick={handleGenerate} disabled={loading || !situation.trim()} className="premium-btn"
+                style={{ padding: '14px 30px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontSize: 14.5, fontWeight: 600, opacity: (loading || !situation.trim()) ? 0.5 : 1, boxShadow: '0 4px 14px rgba(94,168,224,0.3)' }}>
                 {loading ? 'Preparing...' : unlocked ? 'Get talking points' : 'Get talking points (1 free preview)'}
               </button>
+              {generateError && <p style={{ color: '#D64545', fontSize: 13, marginTop: 12 }}>{generateError}</p>}
             </>
           )}
 
@@ -492,13 +644,37 @@ export default function App() {
             <div style={{ fontFamily: "'Fraunces', serif", fontSize: 48, fontWeight: 600, color: timerSeconds === 0 ? SKY_DEEP : INK, marginBottom: 16 }}>
               {timerSeconds}s
             </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
               <button onClick={() => startTimer(15)} style={{ padding: '10px 18px', borderRadius: 999, border: `1px solid ${LINE}`, background: '#FFF', cursor: 'pointer', fontSize: 13 }}>15s</button>
               <button onClick={() => startTimer(30)} style={{ padding: '10px 18px', borderRadius: 999, border: `1px solid ${LINE}`, background: '#FFF', cursor: 'pointer', fontSize: 13 }}>30s</button>
               <button onClick={() => startTimer(60)} style={{ padding: '10px 18px', borderRadius: 999, border: `1px solid ${LINE}`, background: '#FFF', cursor: 'pointer', fontSize: 13 }}>60s</button>
               <button onClick={() => { setTimerRunning(false); logPractice(); }} style={{ padding: '10px 18px', borderRadius: 999, border: 'none', background: SKY, color: '#FFF', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Done</button>
             </div>
             <p style={{ fontSize: 12, color: INK_SOFT, marginTop: 20 }}>Rehearsed <strong style={{ color: SKY_DEEP }}>{practiceCount}</strong> times so far</p>
+
+            {/* Голосовая отработка — бесплатно, через встроенное в браузер распознавание речи */}
+            <div style={{ marginTop: 24, paddingTop: 24, borderTop: `1px solid ${LINE}` }}>
+              <p style={{ fontSize: 13, color: INK_SOFT, marginBottom: 14 }}>Or say it out loud — see what actually came out.</p>
+              <button
+                onClick={toggleVoicePractice}
+                className="premium-btn"
+                style={{
+                  padding: '12px 24px', borderRadius: 999, border: 'none', cursor: 'pointer',
+                  background: isListening ? '#D64545' : SKY, color: '#FFF', fontSize: 13.5, fontWeight: 600,
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3z" /><path d="M19 11a1 1 0 00-2 0 5 5 0 01-10 0 1 1 0 00-2 0 7 7 0 006 6.93V20H9a1 1 0 000 2h6a1 1 0 000-2h-2v-2.07A7 7 0 0019 11z" /></svg>
+                {isListening ? 'Listening... tap to stop' : 'Start speaking'}
+              </button>
+              {voiceTranscript && (
+                <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 10, background: '#FFF', border: `1px solid ${LINE}`, textAlign: 'left' }}>
+                  <div style={{ fontSize: 10.5, color: INK_SOFT, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>What you said</div>
+                  <p style={{ fontSize: 14, lineHeight: 1.5, margin: 0, color: INK }}>{voiceTranscript}</p>
+                </div>
+              )}
+              {voiceError && <p style={{ fontSize: 12.5, color: '#D64545', marginTop: 10 }}>{voiceError}</p>}
+            </div>
           </div>
         </div>
       )}
