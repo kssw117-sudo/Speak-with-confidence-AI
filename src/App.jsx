@@ -8,6 +8,12 @@ const INK_SOFT = '#6B6B72';
 const LINE = '#E5E7EB';
 const BG = '#FFFFFF';
 
+const LANGUAGES = [
+  'English', 'Spanish', 'French', 'German', 'Portuguese', 'Italian', 'Russian',
+  'Ukrainian', 'Polish', 'Dutch', 'Turkish', 'Arabic', 'Hindi', 'Chinese',
+  'Japanese', 'Korean', 'Vietnamese', 'Thai', 'Indonesian', 'Swedish',
+];
+
 const PAGES = [
   { id: 'home', label: 'Home' },
   { id: 'scenario', label: 'Scenario prep', icon: 'target' },
@@ -65,7 +71,7 @@ const SCENARIOS = [
 const FAQS = [
   { q: 'Is this the same as SayItRight AI?', a: 'No. SayItRight fixes what you write. This is for what you say out loud, in the moment, when there\'s no time to draft anything.' },
   { q: 'Do I need an account?', a: 'No accounts, no sign-up. Your saved phrases live in your browser.' },
-  { q: 'What languages does it support?', a: 'The coaching itself works in your own language, so the advice actually lands, not just the phrases you\'ll say.' },
+  { q: 'What languages does it support?', a: 'Scenario prep works in 20 languages, pick one from a dropdown, and the AI writes your talking points, tone notes, and cultural context in that language. The static phrase library and prep checklist are in English for now.' },
 ];
 
 const PHRASE_CATEGORIES = [
@@ -126,10 +132,13 @@ const PHRASE_CATEGORIES = [
 ];
 
 export default function App() {
-  const [page, setPage] = useState('home');
+  const [page, setPage] = useState(() => localStorage.getItem('swc_last_page') || 'home');
   const [situation, setSituation] = useState(() => localStorage.getItem('swc_draft_situation') || '');
+  const [outputLang, setOutputLang] = useState(() => localStorage.getItem('swc_output_lang') || 'English');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('swc_last_result') || 'null'); } catch (e) { return null; }
+  });
   const [generateError, setGenerateError] = useState('');
   const [cardIndex, setCardIndex] = useState(0);
   const [openFaq, setOpenFaq] = useState(null);
@@ -199,6 +208,20 @@ export default function App() {
   }, [situation]);
 
   useEffect(() => {
+    localStorage.setItem('swc_output_lang', outputLang);
+  }, [outputLang]);
+
+  useEffect(() => {
+    try {
+      if (result) localStorage.setItem('swc_last_result', JSON.stringify(result));
+    } catch (e) { /* превышена квота localStorage — пропускаем, не критично */ }
+  }, [result]);
+
+  useEffect(() => {
+    localStorage.setItem('swc_last_page', page);
+  }, [page]);
+
+  useEffect(() => {
     if (!timerRunning || timerSeconds <= 0) return;
     const id = setTimeout(() => setTimerSeconds(s => s - 1), 1000);
     return () => clearTimeout(id);
@@ -264,7 +287,7 @@ export default function App() {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ situation, licenseCode: localStorage.getItem('swc_licenseCode') || '' }),
+        body: JSON.stringify({ situation, outputLang, licenseCode: localStorage.getItem('swc_licenseCode') || '' }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -509,6 +532,12 @@ export default function App() {
             </div>
           ) : (
             <>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+                <select value={outputLang} onChange={e => setOutputLang(e.target.value)}
+                  style={{ fontSize: 12.5, padding: '6px 10px', borderRadius: 8, border: `1px solid ${LINE}`, background: '#FFF', color: INK_SOFT, cursor: 'pointer' }}>
+                  {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
+                </select>
+              </div>
               <textarea value={situation} onChange={e => setSituation(e.target.value)} rows={4}
                 placeholder="Asking my manager for a raise after a strong quarter, but the company just announced a hiring freeze..."
                 style={{ width: '100%', padding: 16, borderRadius: 12, border: `1px solid ${LINE}`, fontSize: 14.5, resize: 'vertical', marginBottom: 20 }} />
