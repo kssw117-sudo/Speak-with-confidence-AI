@@ -3,11 +3,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { situation, licenseCode } = req.body || {};
+  const { situation, licenseCode, outputLang } = req.body || {};
 
   if (!situation || !situation.trim()) {
     return res.status(400).json({ error: 'Describe the situation first.' });
   }
+
+  const lang = (outputLang && String(outputLang).trim()) || 'English';
 
   // Проверка кода доступа — единый код на продукт, как у остальных
   // продуктов Plainwork при прямой продаже через Lava
@@ -22,6 +24,8 @@ export default async function handler(req, res) {
 
   const systemPrompt = `You help someone prepare for a spoken conversation they're anxious about — a salary negotiation, a difficult client call, a job interview, declining a request, and similar situations. You are not helping them write anything down to send; you are preparing them for something they will say OUT LOUD, in the moment, possibly under pressure.
 
+Write your ENTIRE response — every point, the tone note, and the cultural note — in ${lang}. All string values in the JSON must be in ${lang}, not English, unless ${lang} is English.
+
 Given the situation the user describes, return a JSON object with this exact shape:
 {
   "points": ["string", "string", "string", "string", "string"],
@@ -35,6 +39,7 @@ Rules for "points":
 - Each point is a single sentence or two, conversational, no bullet formatting inside the string.
 - Do not use em dashes or double hyphens; use a single hyphen or a comma instead.
 - Never invent specific numbers, names, or company details the user didn't provide.
+- Remember: everything must be written in ${lang}.
 
 Respond with ONLY the JSON object, no other text, no markdown code fences.`;
 
