@@ -12,6 +12,8 @@ const LANGUAGES = [
   'English', 'Spanish', 'French', 'German', 'Portuguese', 'Italian', 'Russian',
   'Ukrainian', 'Polish', 'Dutch', 'Turkish', 'Arabic', 'Hindi', 'Chinese',
   'Japanese', 'Korean', 'Vietnamese', 'Thai', 'Indonesian', 'Swedish',
+  'Norwegian', 'Danish', 'Finnish', 'Greek', 'Czech', 'Romanian', 'Hungarian',
+  'Hebrew', 'Persian', 'Bengali', 'Urdu', 'Filipino', 'Malay', 'Swahili', 'Serbian',
 ];
 
 const PAGES = [
@@ -71,7 +73,7 @@ const SCENARIOS = [
 const FAQS = [
   { q: 'Is this the same as SayItRight AI?', a: 'No. SayItRight fixes what you write. This is for what you say out loud, in the moment, when there\'s no time to draft anything.' },
   { q: 'Do I need an account?', a: 'No accounts, no sign-up. Your saved phrases live in your browser.' },
-  { q: 'What languages does it support?', a: 'Scenario prep works in 20 languages, pick one from a dropdown, and the AI writes your talking points, tone notes, and cultural context in that language. The static phrase library and prep checklist are in English for now.' },
+  { q: 'What languages does it support?', a: 'Scenario prep works in 35 languages, pick one from a dropdown, and the AI writes your talking points, tone notes, and cultural context in that language. The static phrase library and prep checklist are in English for now.' },
 ];
 
 const PHRASE_CATEGORIES = [
