@@ -650,7 +650,10 @@ export default function App() {
             </div>
           ) : (
             <>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+                <button onClick={() => setQuizOpen(true)} style={{ background: 'none', border: 'none', color: SKY_DEEP, fontSize: 12, textDecoration: 'underline', cursor: 'pointer', padding: 0 }}>
+                  Not sure? Take a 30-second test
+                </button>
                 <select value={proficiency} onChange={e => setProficiency(e.target.value)}
                   style={{ fontSize: 12.5, padding: '6px 10px', borderRadius: 8, border: `1px solid ${LINE}`, background: '#FFF', color: INK_SOFT, cursor: 'pointer' }}>
                   <option value="Simple">Simple wording</option>
@@ -932,6 +935,50 @@ export default function App() {
           <p style={{ margin: 0, fontSize: 12.5, color: INK_SOFT, lineHeight: 1.55 }}>
             Describe a conversation you're dreading in Scenario prep, and get talking points, tone coaching, and cultural context. Or skip the wait entirely with the ready-made Phrase library, Prep checklist, and rehearsal timer — no AI needed for those.
           </p>
+        </div>
+      )}
+
+      {/* Короткий тест на уровень английского — без ИИ, статичные вопросы */}
+      {quizOpen && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(20,20,30,0.45)', zIndex: 100,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+        }}>
+          <div style={{ background: '#FFF', borderRadius: 18, padding: 32, maxWidth: 440, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
+            {!quizResult ? (
+              <>
+                <div style={{ fontSize: 11, color: SKY_DEEP, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 10 }}>
+                  Question {quizStep + 1} of {QUIZ_QUESTIONS.length}
+                </div>
+                <p style={{ fontSize: 17, lineHeight: 1.5, marginBottom: 20, color: INK }}>{QUIZ_QUESTIONS[quizStep].q}</p>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {QUIZ_QUESTIONS[quizStep].options.map((opt, i) => (
+                    <button key={i} onClick={() => answerQuiz(i)}
+                      style={{ textAlign: 'left', padding: '12px 16px', borderRadius: 10, border: `1px solid ${LINE}`, background: '#FAFBFC', cursor: 'pointer', fontSize: 14 }}>
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+                <button onClick={resetQuiz} style={{ marginTop: 20, background: 'none', border: 'none', color: INK_SOFT, fontSize: 12.5, cursor: 'pointer', textDecoration: 'underline' }}>
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <p style={{ fontSize: 12, color: SKY_DEEP, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 10 }}>Result</p>
+                <p style={{ fontSize: 20, fontFamily: "'Fraunces', serif", fontWeight: 600, marginBottom: 8 }}>
+                  {quizResult.correctCount} / {QUIZ_QUESTIONS.length} correct
+                </p>
+                <p style={{ fontSize: 14, color: INK_SOFT, marginBottom: 24 }}>
+                  Set to <strong style={{ color: SKY_DEEP }}>{quizResult.level === 'Simple' ? 'Simple wording' : quizResult.level === 'Medium' ? 'Everyday wording' : 'Fluent, natural wording'}</strong> for your talking points. You can always change this manually.
+                </p>
+                <button onClick={resetQuiz} className="premium-btn"
+                  style={{ padding: '12px 24px', borderRadius: 999, border: 'none', background: SKY, color: '#FFF', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>
+                  Done
+                </button>
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>
