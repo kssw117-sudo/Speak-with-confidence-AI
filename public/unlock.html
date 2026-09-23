@@ -5,19 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Unlock Speak With Confidence AI</title>
   <style>
-    body { font-family: 'Inter', -apple-system, sans-serif; background: #FFFFFF; color: #1A1A1E; margin: 0; padding: 0; }
-    .wrap { max-width: 420px; margin: 0 auto; padding: 80px 24px; text-align: center; }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: #FFFFFF; color: #1A1A1E; margin: 0; padding: 0; position: relative; overflow-x: hidden; }
+    .blob { position: fixed; border-radius: 50%; filter: blur(10px); pointer-events: none; z-index: 0; }
+    .blob1 { top: -80px; left: 6%; width: 280px; height: 280px; background: radial-gradient(circle, rgba(94,168,224,0.35) 0%, rgba(94,168,224,0) 70%); }
+    .blob2 { top: -40px; right: 8%; width: 220px; height: 220px; background: radial-gradient(circle, rgba(61,138,199,0.3) 0%, rgba(61,138,199,0) 70%); }
+    .blob3 { bottom: -60px; left: 40%; width: 240px; height: 240px; background: radial-gradient(circle, rgba(94,168,224,0.25) 0%, rgba(94,168,224,0) 70%); }
+    .wrap { max-width: 420px; margin: 0 auto; padding: 80px 24px; text-align: center; position: relative; z-index: 1; }
     .logo { margin-bottom: 20px; }
     h1 { font-family: Georgia, serif; font-weight: 600; font-size: 24px; margin: 0 0 8px; }
     p.sub { color: #6B6B72; font-size: 14px; margin: 0 0 32px; }
-    input { width: 100%; padding: 14px 16px; border-radius: 10px; border: 1px solid #E5E7EB; font-size: 15px; margin-bottom: 12px; box-sizing: border-box; text-align: center; letter-spacing: 0.05em; text-transform: uppercase; }
-    button { width: 100%; padding: 14px; border-radius: 10px; border: none; background: #5EA8E0; color: #FFF; font-size: 15px; font-weight: 600; cursor: pointer; }
+    input { width: 100%; padding: 14px 16px; border-radius: 10px; border: 1px solid #E5E7EB; font-size: 15px; margin-bottom: 12px; box-sizing: border-box; text-align: center; letter-spacing: 0.05em; text-transform: uppercase; background: rgba(255,255,255,0.9); }
+    button { width: 100%; padding: 14px; border-radius: 10px; border: none; background: #5EA8E0; color: #FFF; font-size: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 16px rgba(94,168,224,0.35); }
     button:hover { background: #3D8AC7; }
     .error { color: #D64545; font-size: 13px; margin-top: 10px; min-height: 16px; }
     .success { color: #3D8AC7; font-size: 14px; margin-top: 16px; display: none; }
   </style>
 </head>
 <body>
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
   <div class="wrap">
     <div class="logo">
       <svg width="40" height="40" viewBox="0 0 200 190">
