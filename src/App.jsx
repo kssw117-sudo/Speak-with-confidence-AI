@@ -18,6 +18,22 @@ const LANGUAGES = [
 
 // Простая (не через ИИ) сортировка категорий библиотеки по релевантности
 // профессии — по ключевым словам, чтобы не тратить платные запросы
+// Короткий тест на уровень английского — без ИИ, просто вопросы с
+// нарастающей сложностью, по результату выставляется уровень
+const QUIZ_QUESTIONS = [
+  { q: 'She ___ to the store yesterday.', options: ['go', 'goes', 'went', 'going'], correct: 2 },
+  { q: "I have been working here ___ five years.", options: ['since', 'for', 'from', 'at'], correct: 1 },
+  { q: 'If I ___ more time, I would learn another language.', options: ['have', 'had', 'will have', 'having'], correct: 1 },
+  { q: 'By the time we arrived, the meeting ___.', options: ['already started', 'had already started', 'already starts', 'has already start'], correct: 1 },
+  { q: 'Which sentence sounds most natural to a native speaker?', options: ['I am agree with you', 'I agree with you', 'I am agreeing with you', 'I do agree with you always'], correct: 1 },
+];
+
+function scoreToProficiency(correctCount) {
+  if (correctCount <= 2) return 'Simple';
+  if (correctCount <= 4) return 'Medium';
+  return 'Fluent';
+}
+
 const ROLE_KEYWORDS = {
   'Difficult clients': ['client', 'customer', 'freelance', 'consultant', 'agency', 'service', 'sales', 'account', 'support'],
   'Giving feedback': ['manager', 'lead', 'teacher', 'coach', 'director', 'supervisor', 'mentor', 'teamlead'],
@@ -199,6 +215,32 @@ export default function App() {
   const [situation, setSituation] = useState(() => localStorage.getItem('swc_draft_situation') || '');
   const [userRole, setUserRole] = useState(() => localStorage.getItem('swc_draft_role') || '');
   const [outputLang, setOutputLang] = useState(() => localStorage.getItem('swc_output_lang') || 'English');
+  const [proficiency, setProficiency] = useState(() => localStorage.getItem('swc_proficiency') || 'Fluent');
+  const [quizOpen, setQuizOpen] = useState(false);
+  const [quizStep, setQuizStep] = useState(0);
+  const [quizAnswers, setQuizAnswers] = useState([]);
+  const [quizResult, setQuizResult] = useState(null);
+
+  function answerQuiz(optionIndex) {
+    const nextAnswers = [...quizAnswers, optionIndex];
+    setQuizAnswers(nextAnswers);
+    if (quizStep + 1 < QUIZ_QUESTIONS.length) {
+      setQuizStep(quizStep + 1);
+    } else {
+      const correctCount = nextAnswers.filter((a, i) => a === QUIZ_QUESTIONS[i].correct).length;
+      const level = scoreToProficiency(correctCount);
+      setQuizResult({ correctCount, level });
+      setProficiency(level);
+    }
+  }
+
+  function resetQuiz() {
+    setQuizOpen(false);
+    setQuizStep(0);
+    setQuizAnswers([]);
+    setQuizResult(null);
+  }
+
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(() => {
     try { return JSON.parse(localStorage.getItem('swc_last_result') || 'null'); } catch (e) { return null; }
@@ -284,6 +326,10 @@ export default function App() {
   }, [outputLang]);
 
   useEffect(() => {
+    localStorage.setItem('swc_proficiency', proficiency);
+  }, [proficiency]);
+
+  useEffect(() => {
     try {
       if (result) localStorage.setItem('swc_last_result', JSON.stringify(result));
     } catch (e) { /* превышена квота localStorage — пропускаем, не критично */ }
@@ -359,7 +405,7 @@ export default function App() {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ situation, userRole, outputLang, licenseCode: localStorage.getItem('swc_licenseCode') || '' }),
+        body: JSON.stringify({ situation, userRole, outputLang, proficiency, licenseCode: localStorage.getItem('swc_licenseCode') || '' }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -604,7 +650,13 @@ export default function App() {
             </div>
           ) : (
             <>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+                <select value={proficiency} onChange={e => setProficiency(e.target.value)}
+                  style={{ fontSize: 12.5, padding: '6px 10px', borderRadius: 8, border: `1px solid ${LINE}`, background: '#FFF', color: INK_SOFT, cursor: 'pointer' }}>
+                  <option value="Simple">Simple wording</option>
+                  <option value="Medium">Everyday wording</option>
+                  <option value="Fluent">Fluent, natural wording</option>
+                </select>
                 <select value={outputLang} onChange={e => setOutputLang(e.target.value)}
                   style={{ fontSize: 12.5, padding: '6px 10px', borderRadius: 8, border: `1px solid ${LINE}`, background: '#FFF', color: INK_SOFT, cursor: 'pointer' }}>
                   {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
