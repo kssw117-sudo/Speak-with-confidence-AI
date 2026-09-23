@@ -16,6 +16,29 @@ const LANGUAGES = [
   'Hebrew', 'Persian', 'Bengali', 'Urdu', 'Filipino', 'Malay', 'Swahili', 'Serbian',
 ];
 
+// Простая (не через ИИ) сортировка категорий библиотеки по релевантности
+// профессии — по ключевым словам, чтобы не тратить платные запросы
+const ROLE_KEYWORDS = {
+  'Difficult clients': ['client', 'customer', 'freelance', 'consultant', 'agency', 'service', 'sales', 'account', 'support'],
+  'Giving feedback': ['manager', 'lead', 'teacher', 'coach', 'director', 'supervisor', 'mentor', 'teamlead'],
+  'Networking & small talk': ['sales', 'founder', 'entrepreneur', 'recruiter', 'marketing', 'business development', 'freelance'],
+  'Declining requests': ['freelance', 'manager', 'lead', 'consultant', 'contractor'],
+  'Salary & raises': ['employee', 'staff', 'engineer', 'developer', 'analyst', 'specialist'],
+  'Apologizing well': ['client', 'customer', 'service', 'support', 'manager'],
+};
+
+function sortCategoriesByRole(categories, role) {
+  if (!role || !role.trim()) return categories;
+  const roleLower = role.toLowerCase();
+  const scored = categories.map(cat => {
+    const keywords = ROLE_KEYWORDS[cat.name] || [];
+    const matches = keywords.filter(k => roleLower.includes(k)).length;
+    return { ...cat, _score: matches };
+  });
+  scored.sort((a, b) => b._score - a._score);
+  return scored;
+}
+
 const PAGES = [
   { id: 'home', label: 'Home' },
   { id: 'scenario', label: 'Scenario prep', icon: 'target' },
@@ -84,6 +107,9 @@ const PHRASE_CATEGORIES = [
       "Based on my research, the market rate for this role is higher than my current pay.",
       "I'm not looking for a number right now — I want to understand what a path to X would look like.",
       "I want to make sure I'm being paid in line with my impact, not just my tenure.",
+      "I've taken on X and Y since my last review, and I'd like that reflected in my pay.",
+      "What would need to be true for us to revisit this in three months?",
+      "I'm not comparing myself to anyone else on the team, just to what this role is worth.",
     ],
   },
   {
@@ -93,6 +119,9 @@ const PHRASE_CATEGORIES = [
       "That's fair feedback. Here's what I can fix, and here's what's outside what we agreed to.",
       "I understand the frustration. Let's separate what's urgent from what's important here.",
       "I don't think leaving solves the actual problem — can we try one more fix first?",
+      "I'd rather tell you the truth now than promise something I can't deliver.",
+      "Let's agree on what \"fixed\" actually looks like before I start.",
+      "I want this relationship to work, so tell me what would need to change.",
     ],
   },
   {
@@ -102,6 +131,9 @@ const PHRASE_CATEGORIES = [
       "I'd frame my biggest strength as consistency under pressure, not raw speed.",
       "Can you tell me more about what success looks like in this role after six months?",
       "I'm looking for a place where I can own outcomes, not just execute tasks.",
+      "Honestly, that's still something I'm developing, here's how I'm working on it.",
+      "What does the team usually struggle with most, that I'd be walking into?",
+      "I turned down a similar offer because the scope didn't match what was promised.",
     ],
   },
   {
@@ -111,6 +143,9 @@ const PHRASE_CATEGORIES = [
       "That's not something I'm the right person for, but I know who might be.",
       "I want to help, but I can't commit to that timeline honestly.",
       "No is a complete sentence, but let me give you the reason anyway.",
+      "I could do this by Friday, or the other thing by Wednesday, not both.",
+      "That's outside what I agreed to take on, let's talk about what changed.",
+      "I'm going to say no this time, so I can actually say yes to the next one.",
     ],
   },
   {
@@ -120,6 +155,9 @@ const PHRASE_CATEGORIES = [
       "I'd love to hear more about how you ended up in this field.",
       "That's a great point — I hadn't thought about it from that angle.",
       "Do you have a card, or should we just connect after?",
+      "What are you working on that you're actually excited about right now?",
+      "I've been meaning to ask someone who'd actually know, how does that side of the industry work?",
+      "This has been a great conversation, I'd love to continue it sometime this week.",
     ],
   },
   {
@@ -129,6 +167,29 @@ const PHRASE_CATEGORIES = [
       "The intent was good, but the impact landed differently than you meant.",
       "I want to be direct with you because I respect you enough not to soften this.",
       "What would you do differently if you had this moment again?",
+      "This isn't about one mistake, it's a pattern I want to flag early.",
+      "You did a lot right here, and there's one thing I think could be stronger.",
+      "I'd rather you hear this from me now than find out some other way later.",
+    ],
+  },
+  {
+    name: 'Asking for help',
+    phrases: [
+      "I've tried a couple of things already, but I'm stuck and could use a second opinion.",
+      "Do you have twenty minutes this week to walk through this with me?",
+      "I don't want to guess on this one, can you tell me how you'd approach it?",
+      "This is outside what I know well, who would you go to for this?",
+      "I'm not asking you to do it for me, just to point me in the right direction.",
+    ],
+  },
+  {
+    name: 'Apologizing well',
+    phrases: [
+      "I got this wrong, and I want to tell you exactly what I'm doing differently.",
+      "There's no excuse that changes what happened, so I'll skip the explanation and just fix it.",
+      "I should have flagged this sooner, that's on me.",
+      "I understand if this changes how you see this going forward.",
+      "I'm not just sorry it happened, I'm sorry I didn't catch it earlier.",
     ],
   },
 ];
@@ -136,13 +197,14 @@ const PHRASE_CATEGORIES = [
 export default function App() {
   const [page, setPage] = useState(() => localStorage.getItem('swc_last_page') || 'home');
   const [situation, setSituation] = useState(() => localStorage.getItem('swc_draft_situation') || '');
+  const [userRole, setUserRole] = useState(() => localStorage.getItem('swc_draft_role') || '');
   const [outputLang, setOutputLang] = useState(() => localStorage.getItem('swc_output_lang') || 'English');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(() => {
     try { return JSON.parse(localStorage.getItem('swc_last_result') || 'null'); } catch (e) { return null; }
   });
   const [generateError, setGenerateError] = useState('');
-  const [cardIndex, setCardIndex] = useState(0);
+  const [cardIndex, setCardIndex] = useState(() => parseInt(localStorage.getItem('swc_card_index') || '0', 10));
   const [openFaq, setOpenFaq] = useState(null);
   const [librarySearch, setLibrarySearch] = useState('');
   const [savedPhrases, setSavedPhrases] = useState(() => {
@@ -208,6 +270,14 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('swc_draft_situation', situation);
   }, [situation]);
+
+  useEffect(() => {
+    localStorage.setItem('swc_draft_role', userRole);
+  }, [userRole]);
+
+  useEffect(() => {
+    localStorage.setItem('swc_card_index', String(cardIndex));
+  }, [cardIndex]);
 
   useEffect(() => {
     localStorage.setItem('swc_output_lang', outputLang);
@@ -289,7 +359,7 @@ export default function App() {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ situation, outputLang, licenseCode: localStorage.getItem('swc_licenseCode') || '' }),
+        body: JSON.stringify({ situation, userRole, outputLang, licenseCode: localStorage.getItem('swc_licenseCode') || '' }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -540,6 +610,13 @@ export default function App() {
                   {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
                 </select>
               </div>
+              <label style={{ display: 'block', fontSize: 12.5, color: INK_SOFT, marginBottom: 6 }}>What do you do? (optional, but sharpens the advice)</label>
+              <input
+                value={userRole}
+                onChange={e => setUserRole(e.target.value)}
+                placeholder="e.g. freelance graphic designer, restaurant manager, software engineer..."
+                style={{ width: '100%', padding: '12px 16px', borderRadius: 10, border: `1px solid ${LINE}`, fontSize: 14, marginBottom: 16 }}
+              />
               <textarea value={situation} onChange={e => setSituation(e.target.value)} rows={4}
                 placeholder="Asking my manager for a raise after a strong quarter, but the company just announced a hiring freeze..."
                 style={{ width: '100%', padding: 16, borderRadius: 12, border: `1px solid ${LINE}`, fontSize: 14.5, resize: 'vertical', marginBottom: 20 }} />
@@ -595,13 +672,18 @@ export default function App() {
         <div style={{ maxWidth: 900, margin: '0 auto', padding: '60px 24px' }}>
           <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 26, marginBottom: 8 }}>Phrase library</h2>
           <p style={{ fontSize: 14, color: INK_SOFT, marginBottom: 24 }}>Ready lines by situation — no waiting, no generation.</p>
+          {userRole.trim() && (
+            <p style={{ fontSize: 12.5, color: SKY_DEEP, marginTop: -14, marginBottom: 24 }}>
+              Sorted for: <strong>{userRole}</strong> &middot; <button onClick={() => setPage('scenario')} style={{ background: 'none', border: 'none', color: SKY_DEEP, textDecoration: 'underline', cursor: 'pointer', fontSize: 12.5, padding: 0 }}>change</button>
+            </p>
+          )}
           <input
             value={librarySearch}
             onChange={e => setLibrarySearch(e.target.value)}
             placeholder="Search phrases or categories..."
             style={{ width: '100%', padding: 14, borderRadius: 10, border: `1px solid ${LINE}`, fontSize: 14, marginBottom: 32 }}
           />
-          {PHRASE_CATEGORIES
+          {sortCategoriesByRole(PHRASE_CATEGORIES, userRole)
             .map(cat => ({
               ...cat,
               phrases: cat.phrases.filter(p =>
@@ -613,7 +695,14 @@ export default function App() {
             .filter(cat => cat.phrases.length > 0)
             .map((cat, ci) => (
               <div key={ci} style={{ marginBottom: 36 }}>
-                <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 14, color: SKY_DEEP }}>{cat.name}</h3>
+                <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 14, color: SKY_DEEP, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  {cat.name}
+                  {cat._score > 0 && (
+                    <span style={{ fontSize: 10, fontWeight: 600, color: SKY_DEEP, background: SKY_PALE, padding: '3px 9px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                      Recommended for you
+                    </span>
+                  )}
+                </h3>
                 <div style={{ display: 'grid', gap: 10 }}>
                   {cat.phrases.map((p, pi) => (
                     <div key={pi} style={{
@@ -657,6 +746,12 @@ export default function App() {
               'Take three slow breaths before you start',
               'Stand or sit up straight — posture changes your voice',
               'Decide your walk-away point in advance',
+              ...(/client|customer|freelance|consultant|agency|sales|account/i.test(userRole)
+                ? ['Have the account history or last agreement in front of you before you start']
+                : []),
+              ...(/manager|lead|director|supervisor|teamlead/i.test(userRole)
+                ? ['Decide what you want them to walk away doing differently, not just knowing']
+                : []),
             ].map((item, i) => (
               <label key={i} style={{
                 display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
@@ -742,13 +837,18 @@ export default function App() {
 
       {/* ---------- FOOTER ---------- */}
       <footer style={{ borderTop: `1px solid ${LINE}`, padding: '32px 24px', marginTop: 60 }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-          <span style={{ fontSize: 12, color: INK_SOFT }}>Powered by Claude &middot; Plainwork by Ksenia</span>
-          <div style={{ display: 'flex', gap: 18 }}>
-            <a href="/terms.html" style={{ fontSize: 12, color: INK_SOFT }}>Terms</a>
-            <a href="/privacy.html" style={{ fontSize: 12, color: INK_SOFT }}>Privacy</a>
-            <a href="/refund.html" style={{ fontSize: 12, color: INK_SOFT }}>Refunds</a>
-            <a href="mailto:kssw117@gmail.com" style={{ fontSize: 12, color: INK_SOFT }}>kssw117@gmail.com</a>
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <p style={{ fontFamily: "'Fraunces', serif", fontStyle: 'normal', fontSize: 15, color: SKY_DEEP, textAlign: 'center', margin: '0 0 24px' }}>
+            Confidence isn't luck. It's preparation.
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+            <span style={{ fontSize: 12, color: INK_SOFT }}>Powered by Claude &middot; Plainwork by Ksenia</span>
+            <div style={{ display: 'flex', gap: 18 }}>
+              <a href="/terms.html" style={{ fontSize: 12, color: INK_SOFT }}>Terms</a>
+              <a href="/privacy.html" style={{ fontSize: 12, color: INK_SOFT }}>Privacy</a>
+              <a href="/refund.html" style={{ fontSize: 12, color: INK_SOFT }}>Refunds</a>
+              <a href="mailto:kssw117@gmail.com" style={{ fontSize: 12, color: INK_SOFT }}>kssw117@gmail.com</a>
+            </div>
           </div>
         </div>
       </footer>
