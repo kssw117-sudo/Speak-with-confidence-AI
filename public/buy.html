@@ -5,8 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Buy Speak With Confidence AI</title>
   <style>
-    body { font-family: 'Inter', -apple-system, sans-serif; background: #FFFFFF; color: #1A1A1E; margin: 0; padding: 0; }
-    .wrap { max-width: 480px; margin: 0 auto; padding: 60px 24px; text-align: center; }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: #FFFFFF; color: #1A1A1E; margin: 0; padding: 0; position: relative; overflow-x: hidden; }
+    .blob { position: fixed; border-radius: 50%; filter: blur(10px); pointer-events: none; z-index: 0; }
+    .blob1 { top: -80px; left: 6%; width: 280px; height: 280px; background: radial-gradient(circle, rgba(94,168,224,0.35) 0%, rgba(94,168,224,0) 70%); }
+    .blob2 { top: -40px; right: 8%; width: 220px; height: 220px; background: radial-gradient(circle, rgba(61,138,199,0.3) 0%, rgba(61,138,199,0) 70%); }
+    .blob3 { bottom: -60px; left: 40%; width: 240px; height: 240px; background: radial-gradient(circle, rgba(94,168,224,0.25) 0%, rgba(94,168,224,0) 70%); }
+    .wrap { max-width: 480px; margin: 0 auto; padding: 60px 24px; text-align: center; position: relative; z-index: 1; }
     .logo { margin-bottom: 20px; }
     h1 { font-family: Georgia, serif; font-weight: 600; font-size: 28px; margin: 0 0 12px; }
     p.sub { color: #6B6B72; font-size: 14px; margin: 0 0 32px; }
@@ -15,13 +19,16 @@
     .features { text-align: left; margin: 0 0 32px; padding: 0; list-style: none; }
     .features li { padding: 8px 0; font-size: 14px; border-bottom: 1px solid #E5E7EB; }
     .features li:before { content: "✓ "; color: #3D8AC7; font-weight: 600; }
-    .widget-box { border: 1px solid #E5E7EB; border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+    .widget-box { border: 1px solid #E5E7EB; border-radius: 16px; padding: 24px; margin-bottom: 24px; background: rgba(255,255,255,0.85); backdrop-filter: blur(6px); box-shadow: 0 8px 24px rgba(20,20,30,0.06); }
     .links { font-size: 12px; color: #6B6B72; }
     .links a { color: #6B6B72; margin: 0 8px; }
     iframe { border: none; border-radius: 10px; }
   </style>
 </head>
 <body>
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
   <div class="wrap">
     <div class="logo">
       <svg width="40" height="40" viewBox="0 0 200 190">
@@ -33,7 +40,7 @@
     <h1>Speak With Confidence AI</h1>
     <p class="sub">Not what to write, what to say — out loud, in the moment.</p>
 
-    <div class="price">$59</div>
+    <div class="price">$149</div>
     <div class="price-note">One-time payment. No subscription, ever.</div>
 
     <ul class="features">
@@ -41,9 +48,9 @@
       <li>Tone &amp; delivery coaching</li>
       <li>Cultural context notes</li>
       <li>Personal phrasebook, saved for reuse</li>
-      <li>24-phrase static library, no AI needed</li>
+      <li>52-phrase static library, no AI needed</li>
       <li>Prep checklist &amp; rehearsal timer</li>
-      <li>Free browser voice playback</li>
+      <li>Free browser voice playback &amp; recognition</li>
       <li>Practice tracker</li>
     </ul>
 
