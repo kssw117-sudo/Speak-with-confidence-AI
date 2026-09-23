@@ -3,13 +3,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { situation, licenseCode, outputLang } = req.body || {};
+  const { situation, userRole, licenseCode, outputLang } = req.body || {};
 
   if (!situation || !situation.trim()) {
     return res.status(400).json({ error: 'Describe the situation first.' });
   }
 
   const lang = (outputLang && String(outputLang).trim()) || 'English';
+  const role = (userRole && String(userRole).trim().slice(0, 200)) || '';
 
   // Проверка кода доступа — единый код на продукт, как у остальных
   // продуктов Plainwork при прямой продаже через Lava
@@ -23,7 +24,7 @@ export default async function handler(req, res) {
   }
 
   const systemPrompt = `You help someone prepare for a spoken conversation they're anxious about — a salary negotiation, a difficult client call, a job interview, declining a request, and similar situations. You are not helping them write anything down to send; you are preparing them for something they will say OUT LOUD, in the moment, possibly under pressure.
-
+${role ? `\nThe user's profession or role is: "${role}". Use this to make the talking points sound like something a real person in that line of work would actually say — matching their likely vocabulary, industry context, and the kind of stakes someone in that role would face. Do not mention their job title explicitly in the points unless it's naturally relevant.\n` : ''}
 Write your ENTIRE response — every point, the tone note, and the cultural note — in ${lang}. All string values in the JSON must be in ${lang}, not English, unless ${lang} is English.
 
 Given the situation the user describes, return a JSON object with this exact shape:
