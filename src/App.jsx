@@ -905,6 +905,9 @@ export default function App() {
               <a href="mailto:kssw117@gmail.com" style={{ fontSize: 12, color: INK_SOFT }}>kssw117@gmail.com</a>
             </div>
           </div>
+          <p style={{ fontSize: 10.5, fontWeight: 700, color: INK_SOFT, textAlign: 'center', marginTop: 20, opacity: 0.8 }}>
+            Thanks to Skyeng for the idea behind voice practice <span style={{ color: SKY }}>&#9825;</span>
+          </p>
         </div>
       </footer>
 
