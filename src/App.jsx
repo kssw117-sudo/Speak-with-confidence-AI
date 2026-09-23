@@ -450,41 +450,45 @@ export default function App() {
       `}</style>
 
       <header style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '18px 40px', borderBottom: `1px solid ${LINE}`, position: 'sticky', top: 0,
-        background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(10px)', zIndex: 10,
+        padding: '16px 40px 0', borderBottom: `1px solid ${LINE}`, position: 'sticky', top: 0,
+        background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', zIndex: 10,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => setPage('home')}>
-          <svg width="28" height="28" viewBox="0 0 200 190">
-            <rect x="15" y="15" width="170" height="115" rx="40" fill={SKY} />
-            <polygon points="55,130 40,165 80,132" fill={SKY} />
-            <polyline points="65,72 92,100 140,50" stroke="#FFF" strokeWidth="16" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span className="logo-text" style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 17 }}>Speak With Confidence</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => setPage('home')}>
+            <svg width="28" height="28" viewBox="0 0 200 190">
+              <rect x="15" y="15" width="170" height="115" rx="40" fill={SKY} />
+              <polygon points="55,130 40,165 80,132" fill={SKY} />
+              <polyline points="65,72 92,100 140,50" stroke="#FFF" strokeWidth="16" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="logo-text" style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 17 }}>Speak With Confidence</span>
+          </div>
+          <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(v => !v)} aria-label="Menu"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', alignItems: 'center', justifyContent: 'center', width: 36, height: 36 }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={INK} strokeWidth="2" strokeLinecap="round">
+              {mobileMenuOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <><path d="M3 6h18" /><path d="M3 12h18" /><path d="M3 18h18" /></>}
+            </svg>
+          </button>
         </div>
-        <nav className="desktop-nav" style={{ gap: 4 }}>
+        <nav className="desktop-nav" style={{ gap: 10, justifyContent: 'center', padding: '14px 0' }}>
           {PAGES.slice(1).map(p => (
-            <button key={p.id} onClick={() => setPage(p.id)}
+            <button key={p.id} onClick={() => setPage(p.id)} className="premium-btn"
               style={{
-                background: page === p.id ? SKY_PALE : 'none', border: 'none', cursor: 'pointer', fontSize: 13.5,
-                color: page === p.id ? SKY_DEEP : INK_SOFT,
-                fontWeight: page === p.id ? 600 : 400,
-                padding: '9px 16px',
+                background: page === p.id ? SKY : '#FFF',
+                border: `1.5px solid ${page === p.id ? SKY : LINE}`,
+                cursor: 'pointer', fontSize: 14,
+                color: page === p.id ? '#FFF' : INK,
+                fontWeight: 600,
+                padding: '11px 20px',
                 borderRadius: 999,
                 whiteSpace: 'nowrap',
-                display: 'flex', alignItems: 'center', gap: 7,
+                display: 'flex', alignItems: 'center', gap: 8,
+                boxShadow: page === p.id ? '0 3px 10px rgba(94,168,224,0.35)' : '0 1px 3px rgba(20,20,30,0.06)',
               }}>
-              <FeatureIcon type={p.icon} color={page === p.id ? SKY_DEEP : INK_SOFT} size={16} />
+              <FeatureIcon type={p.icon} color={page === p.id ? '#FFF' : SKY_DEEP} size={17} />
               {p.label}
             </button>
           ))}
         </nav>
-        <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(v => !v)} aria-label="Menu"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', alignItems: 'center', justifyContent: 'center', width: 36, height: 36 }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={INK} strokeWidth="2" strokeLinecap="round">
-            {mobileMenuOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <><path d="M3 6h18" /><path d="M3 12h18" /><path d="M3 18h18" /></>}
-          </svg>
-        </button>
       </header>
 
       {mobileMenuOpen && (
@@ -493,11 +497,12 @@ export default function App() {
             <button key={p.id} onClick={() => { setPage(p.id); setMobileMenuOpen(false); }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left',
-                background: page === p.id ? SKY_PALE : 'none', border: 'none', cursor: 'pointer', fontSize: 14.5,
-                color: page === p.id ? SKY_DEEP : INK_SOFT, fontWeight: page === p.id ? 600 : 400,
-                padding: '12px 14px', borderRadius: 10, marginTop: 4,
+                background: page === p.id ? SKY : '#FFF',
+                border: `1.5px solid ${page === p.id ? SKY : LINE}`, cursor: 'pointer', fontSize: 14.5,
+                color: page === p.id ? '#FFF' : INK, fontWeight: 600,
+                padding: '12px 14px', borderRadius: 10, marginTop: 6,
               }}>
-              <FeatureIcon type={p.icon} color={page === p.id ? SKY_DEEP : INK_SOFT} size={18} />
+              <FeatureIcon type={p.icon} color={page === p.id ? '#FFF' : SKY_DEEP} size={18} />
               {p.label}
             </button>
           ))}
@@ -526,7 +531,9 @@ export default function App() {
               </button>
               <div style={{ display: 'flex', justifyContent: 'center', gap: 48, marginTop: 56, flexWrap: 'wrap' }}>
                 <div><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>8</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>tools in one</div></div>
+                <div><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>35</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>languages</div></div>
                 <div><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>No</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>sign-up needed</div></div>
+                <div><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>52</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>ready phrases</div></div>
                 <div><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>1</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>time payment</div></div>
               </div>
 
@@ -905,8 +912,13 @@ export default function App() {
               <a href="mailto:kssw117@gmail.com" style={{ fontSize: 12, color: INK_SOFT }}>kssw117@gmail.com</a>
             </div>
           </div>
-          <p style={{ fontSize: 10.5, fontWeight: 700, color: INK_SOFT, textAlign: 'center', marginTop: 20, opacity: 0.8 }}>
-            Thanks to Skyeng for the idea behind voice practice <span style={{ color: SKY }}>&#9825;</span>
+          <p style={{ fontSize: 10.5, fontWeight: 700, color: INK, textAlign: 'center', marginTop: 20 }}>
+            Thanks to Skyeng for the idea behind voice practice &#128153;
+          </p>
+          <p style={{ fontSize: 12, textAlign: 'center', marginTop: 14 }}>
+            <a href="https://plainwork.website/" target="_blank" rel="noopener noreferrer" style={{ color: SKY_DEEP, fontWeight: 600 }}>
+              More useful tools at Plainwork &rarr;
+            </a>
           </p>
         </div>
       </footer>
