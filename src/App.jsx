@@ -210,6 +210,35 @@ const PHRASE_CATEGORIES = [
   },
 ];
 
+// Дневной лимит генераций для тех, кто уже разблокировал доступ кодом —
+// защита от злоупотребления одним купленным кодом, тот же паттерн, что
+// используется в остальных продуктах Plainwork
+const DAILY_LIMIT = 50;
+const DAILY_KEY = 'swc_daily_gen';
+
+function getDailyCount() {
+  try {
+    const record = JSON.parse(localStorage.getItem(DAILY_KEY) || 'null');
+    const today = new Date().toDateString();
+    if (!record || record.date !== today) return 0;
+    return record.count;
+  } catch (e) { return 0; }
+}
+
+function incrementDailyCount() {
+  const today = new Date().toDateString();
+  let record;
+  try {
+    record = JSON.parse(localStorage.getItem(DAILY_KEY) || 'null');
+  } catch (e) { record = null; }
+  if (!record || record.date !== today) {
+    record = { date: today, count: 0 };
+  }
+  record.count += 1;
+  localStorage.setItem(DAILY_KEY, JSON.stringify(record));
+  return record.count;
+}
+
 export default function App() {
   const [page, setPage] = useState(() => localStorage.getItem('swc_last_page') || 'home');
   const [situation, setSituation] = useState(() => localStorage.getItem('swc_draft_situation') || '');
@@ -270,6 +299,7 @@ export default function App() {
   const [unlocked, setUnlocked] = useState(() => localStorage.getItem('swc_unlocked') === 'true');
   const [freeTrialCount, setFreeTrialCount] = useState(() => parseInt(localStorage.getItem('swc_free_trial_count') || '0', 10));
   const FREE_TRIAL_LIMIT = 3;
+  const [dailyCount, setDailyCount] = useState(() => getDailyCount());
   const [licenseCode, setLicenseCode] = useState('');
   const [licenseError, setLicenseError] = useState('');
   const [showHelpBubble, setShowHelpBubble] = useState(false);
@@ -400,6 +430,7 @@ export default function App() {
   async function handleGenerate() {
     if (!situation.trim()) return;
     if (!unlocked && freeTrialCount >= FREE_TRIAL_LIMIT) return; // форма скрыта в этом случае, но на всякий случай
+    if (unlocked && dailyCount >= DAILY_LIMIT) return; // форма скрыта в этом случае, но на всякий случай
     setLoading(true);
     setGenerateError('');
     try {
@@ -419,6 +450,8 @@ export default function App() {
         const next = freeTrialCount + 1;
         localStorage.setItem('swc_free_trial_count', String(next));
         setFreeTrialCount(next);
+      } else {
+        setDailyCount(incrementDailyCount());
       }
     } catch (e) {
       setGenerateError('Could not reach the server. Check your connection and try again.');
@@ -642,16 +675,20 @@ export default function App() {
         <div key="scenario" className="page-fade" style={{ maxWidth: 640, margin: '0 auto', padding: '60px 24px' }}>
           <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 26, marginBottom: 8 }}>What's the situation?</h2>
           <p style={{ fontSize: 14, color: INK_SOFT, marginBottom: 8 }}>Describe it in your own words — as messy as it actually is.</p>
-          {!unlocked && (
+          {!unlocked && freeTrialCount < FREE_TRIAL_LIMIT && (
             <p style={{ fontSize: 12.5, color: SKY_DEEP, marginBottom: 24 }}>
-              {freeTrialCount} of {FREE_TRIAL_LIMIT} free scenarios used
+              {FREE_TRIAL_LIMIT} free previews, no code needed
+            </p>
+          )}
+          {unlocked && (
+            <p style={{ fontSize: 12.5, color: SKY_DEEP, marginBottom: 24 }}>
+              {dailyCount} of {DAILY_LIMIT} today
             </p>
           )}
 
           {!unlocked && freeTrialCount >= FREE_TRIAL_LIMIT ? (
             <div style={{ padding: 24, borderRadius: 14, background: SKY_PALE, marginBottom: 24 }}>
-              <p style={{ fontSize: 14, fontWeight: 600, margin: '0 0 4px' }}>All free scenarios used</p>
-              <p style={{ fontSize: 13, color: INK_SOFT, margin: '0 0 16px' }}>Enter your access code to keep preparing scenarios.</p>
+              <p style={{ fontSize: 14, fontWeight: 600, margin: '0 0 16px' }}>Free previews used</p>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input
                   type="text"
@@ -667,6 +704,11 @@ export default function App() {
               </div>
               {licenseError && <p style={{ color: '#D64545', fontSize: 12.5, marginTop: 8 }}>{licenseError}</p>}
               <a href="/buy.html" style={{ display: 'block', marginTop: 10, fontSize: 12.5, color: SKY_DEEP }}>No code? Get access</a>
+            </div>
+          ) : unlocked && dailyCount >= DAILY_LIMIT ? (
+            <div style={{ padding: 24, borderRadius: 14, background: SKY_PALE, marginBottom: 24 }}>
+              <p style={{ fontSize: 14, fontWeight: 600, margin: '0 0 4px' }}>Today's 50 generations are used up</p>
+              <p style={{ fontSize: 13, color: INK_SOFT, margin: 0 }}>Come back tomorrow for 50 more — this resets daily, doesn't affect anything else in the app.</p>
             </div>
           ) : (
             <>
@@ -697,7 +739,7 @@ export default function App() {
                 style={{ width: '100%', padding: 16, borderRadius: 12, border: `1px solid ${LINE}`, fontSize: 14.5, resize: 'vertical', marginBottom: 20 }} />
               <button onClick={handleGenerate} disabled={loading || !situation.trim()} className="premium-btn"
                 style={{ padding: '14px 30px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontSize: 14.5, fontWeight: 600, opacity: (loading || !situation.trim()) ? 0.5 : 1, boxShadow: '0 4px 14px rgba(94,168,224,0.3)' }}>
-                {loading ? 'Preparing...' : unlocked ? 'Get talking points' : `Get talking points (${FREE_TRIAL_LIMIT - freeTrialCount} free left)`}
+                {loading ? 'Preparing...' : unlocked ? `Get talking points (${DAILY_LIMIT - dailyCount} left today)` : `Get talking points (${FREE_TRIAL_LIMIT - freeTrialCount} free left)`}
               </button>
               {generateError && <p style={{ color: '#D64545', fontSize: 13, marginTop: 12 }}>{generateError}</p>}
             </>
