@@ -241,6 +241,7 @@ function incrementDailyCount() {
 
 export default function App() {
   const [page, setPage] = useState(() => localStorage.getItem('swc_last_page') || 'home');
+  const isPopStateRef = React.useRef(false);
   const [situation, setSituation] = useState(() => localStorage.getItem('swc_draft_situation') || '');
   const [userRole, setUserRole] = useState(() => localStorage.getItem('swc_draft_role') || '');
   const [outputLang, setOutputLang] = useState(() => localStorage.getItem('swc_output_lang') || 'English');
@@ -369,6 +370,27 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('swc_last_page', page);
   }, [page]);
+
+  // Синхронизация со стрелками "назад"/"вперёд" в браузере и свайпами на
+  // телефоне — без этого они не знают о переключениях между страницами,
+  // потому что те происходят через state, а не настоящие URL
+  useEffect(() => {
+    if (isPopStateRef.current) {
+      isPopStateRef.current = false;
+      return;
+    }
+    window.history.pushState({ page }, '', '#' + page);
+  }, [page]);
+
+  useEffect(() => {
+    function handlePopState(e) {
+      isPopStateRef.current = true;
+      setPage(e.state?.page || 'home');
+    }
+    window.history.replaceState({ page }, '', '#' + page);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     if (!timerRunning || timerSeconds <= 0) return;
