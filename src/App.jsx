@@ -440,6 +440,12 @@ export default function App() {
         .premium-btn:active:not(:disabled) { transform: scale(0.98); }
         .shimmer-line { background: linear-gradient(90deg, #F0F3F6 0%, #E3ECF4 50%, #F0F3F6 100%); background-size: 200% 100%; animation: shimmer 1.5s ease-in-out infinite; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        @keyframes pageFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .page-fade { animation: pageFadeIn 0.45s cubic-bezier(0.22,1,0.36,1) both; }
+        @keyframes cardFadeIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+        .result-card-anim { animation: cardFadeIn 0.3s ease both; }
+        @keyframes statPop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .stat-pop { animation: statPop 0.5s cubic-bezier(0.22,1,0.36,1) both; }
         .desktop-nav { display: flex; }
         .mobile-menu-btn { display: none; }
         .logo-text { display: inline; }
@@ -512,7 +518,7 @@ export default function App() {
       )}
 
       {page === 'home' && (
-        <>
+        <div key="home" className="page-fade">
           {/* ---------- HERO ---------- */}
           <div style={{ background: `linear-gradient(180deg, ${SKY_PALE} 0%, #FFFFFF 100%)`, padding: '80px 24px 60px', position: 'relative', overflow: 'hidden' }}>
             {/* Мягкие размытые пятна на фоне — для глубины, приём премиальных SaaS-сайтов */}
@@ -532,11 +538,11 @@ export default function App() {
                 Start a scenario &rarr;
               </button>
               <div style={{ display: 'flex', justifyContent: 'center', gap: 48, marginTop: 56, flexWrap: 'wrap' }}>
-                <div><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>8</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>tools in one</div></div>
-                <div><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>35</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>languages</div></div>
-                <div><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>No</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>sign-up needed</div></div>
-                <div><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>52</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>ready phrases</div></div>
-                <div><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>1</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>time payment</div></div>
+                <div className="stat-pop" style={{ animationDelay: '0.05s' }}><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>8</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>tools in one</div></div>
+                <div className="stat-pop" style={{ animationDelay: '0.12s' }}><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>35</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>languages</div></div>
+                <div className="stat-pop" style={{ animationDelay: '0.19s' }}><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>No</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>sign-up needed</div></div>
+                <div className="stat-pop" style={{ animationDelay: '0.26s' }}><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>52</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>ready phrases</div></div>
+                <div className="stat-pop" style={{ animationDelay: '0.33s' }}><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>1</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>time payment</div></div>
               </div>
 
               {/* ---------- PRODUCT MOCKUP ---------- */}
@@ -629,11 +635,11 @@ export default function App() {
               </div>
             ))}
           </div>
-        </>
+        </div>
       )}
 
       {page === 'scenario' && (
-        <div style={{ maxWidth: 640, margin: '0 auto', padding: '60px 24px' }}>
+        <div key="scenario" className="page-fade" style={{ maxWidth: 640, margin: '0 auto', padding: '60px 24px' }}>
           <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 26, marginBottom: 8 }}>What's the situation?</h2>
           <p style={{ fontSize: 14, color: INK_SOFT, marginBottom: 8 }}>Describe it in your own words — as messy as it actually is.</p>
           {!unlocked && (
@@ -709,7 +715,7 @@ export default function App() {
 
           {result && result.points && (
             <div style={{ marginTop: 48 }}>
-              <div className="premium-card" style={{ background: '#F7FAFC', borderRadius: 16, padding: 32, minHeight: 140 }}>
+              <div key={cardIndex} className="premium-card result-card-anim" style={{ background: '#F7FAFC', borderRadius: 16, padding: 32, minHeight: 140 }}>
                 <div style={{ fontSize: 12, color: SKY_DEEP, fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{cardIndex + 1} / {result.points.length}</div>
                 <p style={{ fontSize: 17, lineHeight: 1.6, margin: 0 }}>{result.points[cardIndex]}</p>
               </div>
@@ -738,7 +744,7 @@ export default function App() {
       )}
 
       {page === 'library' && (
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: '60px 24px' }}>
+        <div key="library" className="page-fade" style={{ maxWidth: 900, margin: '0 auto', padding: '60px 24px' }}>
           <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 26, marginBottom: 8 }}>Phrase library</h2>
           <p style={{ fontSize: 14, color: INK_SOFT, marginBottom: 24 }}>Ready lines by situation — no waiting, no generation.</p>
           {userRole.trim() && (
@@ -803,7 +809,7 @@ export default function App() {
         </div>
       )}
       {page === 'checklist' && (
-        <div style={{ maxWidth: 640, margin: '0 auto', padding: '60px 24px' }}>
+        <div key="checklist" className="page-fade" style={{ maxWidth: 640, margin: '0 auto', padding: '60px 24px' }}>
           <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 26, marginBottom: 8 }}>Prep checklist</h2>
           <p style={{ fontSize: 14, color: INK_SOFT, marginBottom: 28 }}>Go through this right before you walk in.</p>
 
@@ -875,7 +881,7 @@ export default function App() {
       )}
 
       {page === 'phrasebook' && (
-        <div style={{ maxWidth: 640, margin: '0 auto', padding: '60px 24px' }}>
+        <div key="phrasebook" className="page-fade" style={{ maxWidth: 640, margin: '0 auto', padding: '60px 24px' }}>
           <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 26, marginBottom: 8 }}>My phrasebook</h2>
           <p style={{ fontSize: 14, color: INK_SOFT, marginBottom: 28 }}>Lines you've saved, ready to reuse.</p>
 
