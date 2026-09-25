@@ -79,14 +79,22 @@ const PAGES = [
 ];
 
 const FEATURES = [
-  { title: 'Scenario prep', body: 'Describe the conversation you\'re dreading, get exact talking points built for it.', icon: 'target', page: 'scenario' },
-  { title: 'Tone coaching', body: 'Not just what to say — where to pause, what to emphasize, how it should sound.', icon: 'wave', page: 'scenario' },
-  { title: 'Cultural context', body: 'How direct is too direct, in the country you\'re actually speaking to.', icon: 'globe', page: 'scenario' },
-  { title: 'Personal phrasebook', body: 'Save the lines that worked. Build your own arsenal over time.', icon: 'bookmark', page: 'phrasebook' },
-  { title: 'Phrase library', body: 'Hundreds of ready lines by situation — browse instantly, no generation needed.', icon: 'library', page: 'library' },
-  { title: 'Prep checklist', body: 'A structured checklist before you walk in — breathing, key points, posture.', icon: 'check', page: 'checklist' },
-  { title: 'Free voice playback', body: 'Hear any phrase read aloud through your browser, at no extra cost.', icon: 'speaker', page: 'library' },
-  { title: 'Practice tracker', body: 'See how many scenarios you\'ve rehearsed. Simple streaks, no pressure.', icon: 'trend', page: 'checklist' },
+  { title: 'Scenario prep', body: 'Describe the conversation you\'re dreading, get exact talking points built for it.', icon: 'target', page: 'scenario',
+    fullBody: 'You type the situation in plain, messy language — no need to explain it neatly. The AI reads it and builds five talking points specifically for that conversation: an opening line, how to state your position, a response to the pushback you\'re most likely to get, a way to hold firm, and a way to close well either direction. It\'s not generic advice — it\'s built around what you actually described.' },
+  { title: 'Tone coaching', body: 'Not just what to say — where to pause, what to emphasize, how it should sound.', icon: 'wave', page: 'scenario',
+    fullBody: 'Every Scenario prep result comes with a short note on delivery: where to slow down, what word to lean on, whether this moment calls for warmth or firmness. Words on a page and words said out loud land differently — this is the part that\'s easy to get right on paper and wrong in the room.' },
+  { title: 'Cultural context', body: 'How direct is too direct, in the country you\'re actually speaking to.', icon: 'globe', page: 'scenario',
+    fullBody: 'What sounds confident in one culture can sound blunt or even rude in another. Alongside your talking points, you get a short read on how direct or formal the moment calls for — so you don\'t accidentally undersell yourself, or come across sharper than you meant to.' },
+  { title: 'Personal phrasebook', body: 'Save the lines that worked. Build your own arsenal over time.', icon: 'bookmark', page: 'phrasebook',
+    fullBody: 'Star any phrase from the library, and it lands here. Over time this becomes your own personal collection of lines that actually worked for you — not generic advice, but your own track record of what landed.' },
+  { title: 'Phrase library', body: 'Hundreds of ready lines by situation — browse instantly, no generation needed.', icon: 'library', page: 'library',
+    fullBody: '52 ready-made phrases across eight everyday situations — salary talks, difficult clients, interviews, declining requests, networking, feedback, asking for help, apologizing well. No waiting on AI, no cost — just browse, search, and use them straight away.' },
+  { title: 'Prep checklist', body: 'A structured checklist before you walk in — breathing, key points, posture.', icon: 'check', page: 'checklist',
+    fullBody: 'A short, practical checklist to run through right before the conversation starts: say your opening line out loud once, name the outcome you actually want, think through the objection you\'re most afraid of, breathe, sit up straight, know your walk-away point. Plus a rehearsal timer and voice practice to actually say it out loud.' },
+  { title: 'Free voice playback', body: 'Hear any phrase read aloud through your browser, at no extra cost.', icon: 'speaker', page: 'library',
+    fullBody: 'Every phrase in the library and your phrasebook can be read aloud through your browser\'s own voice, completely free — no API calls, no cost. Hearing a line out loud, not just reading it, is often the difference between a phrase that sounds natural and one that doesn\'t.' },
+  { title: 'Practice tracker', body: 'See how many scenarios you\'ve rehearsed. Simple streaks, no pressure.', icon: 'trend', page: 'checklist',
+    fullBody: 'A quiet counter of how many times you\'ve rehearsed with the timer or voice practice. No streak pressure, no guilt trips — just a simple, honest number so you can see the habit building.' },
 ];
 
 function FeatureIcon({ type, color, size = 22 }) {
@@ -323,6 +331,7 @@ export default function App() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [speakingText, setSpeakingText] = useState(null);
   const [speakingPaused, setSpeakingPaused] = useState(false);
+  const [expandedFeature, setExpandedFeature] = useState(null);
 
   function toggleSpeak(text) {
     if (!window.speechSynthesis) return;
@@ -791,7 +800,7 @@ export default function App() {
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20 }}>
               {FEATURES.map((f, i) => (
-                <div key={i} className="premium-card" onClick={() => setPage(f.page)}
+                <div key={i} className="premium-card" onClick={() => setExpandedFeature(i)}
                   style={{ padding: 22, borderRadius: 14, background: '#FFF', cursor: 'pointer' }}>
                   <div style={{ width: 42, height: 42, borderRadius: 10, background: SKY_PALE, marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <FeatureIcon type={f.icon} color={SKY_DEEP} />
@@ -1181,6 +1190,35 @@ export default function App() {
           <p style={{ margin: 0, fontSize: 12.5, color: INK_SOFT, lineHeight: 1.55 }}>
             Describe a conversation you're dreading in Scenario prep, and get talking points, tone coaching, and cultural context. Or skip the wait entirely with the ready-made Phrase library, Prep checklist, and rehearsal timer — no AI needed for those.
           </p>
+        </div>
+      )}
+
+      {/* Полное описание функции — открывается по клику на карточку на главной */}
+      {expandedFeature !== null && (
+        <div
+          onClick={() => setExpandedFeature(null)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(20,20,30,0.45)', zIndex: 100,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+          }}
+        >
+          <div onClick={e => e.stopPropagation()} style={{ background: '#FFF', borderRadius: 18, padding: 32, maxWidth: 460, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
+            <div style={{ width: 48, height: 48, borderRadius: 12, background: SKY_PALE, marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <FeatureIcon type={FEATURES[expandedFeature].icon} color={SKY_DEEP} size={24} />
+            </div>
+            <h3 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 22, margin: '0 0 12px' }}>{FEATURES[expandedFeature].title}</h3>
+            <p style={{ fontSize: 14, color: INK, lineHeight: 1.6, margin: '0 0 24px' }}>{FEATURES[expandedFeature].fullBody}</p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => { setPage(FEATURES[expandedFeature].page); setExpandedFeature(null); }} className="premium-btn"
+                style={{ flex: 1, padding: '12px 20px', borderRadius: 999, border: 'none', background: SKY, color: '#FFF', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>
+                Try it now &rarr;
+              </button>
+              <button onClick={() => setExpandedFeature(null)}
+                style={{ padding: '12px 20px', borderRadius: 999, border: `1px solid ${LINE}`, background: '#FFF', color: INK_SOFT, cursor: 'pointer', fontSize: 14 }}>
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
