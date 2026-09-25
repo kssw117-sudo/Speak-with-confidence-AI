@@ -79,14 +79,14 @@ const PAGES = [
 ];
 
 const FEATURES = [
-  { title: 'Scenario prep', body: 'Describe the conversation you\'re dreading, get exact talking points built for it.', icon: 'target' },
-  { title: 'Tone coaching', body: 'Not just what to say — where to pause, what to emphasize, how it should sound.', icon: 'wave' },
-  { title: 'Cultural context', body: 'How direct is too direct, in the country you\'re actually speaking to.', icon: 'globe' },
-  { title: 'Personal phrasebook', body: 'Save the lines that worked. Build your own arsenal over time.', icon: 'bookmark' },
-  { title: 'Phrase library', body: 'Hundreds of ready lines by situation — browse instantly, no generation needed.', icon: 'library' },
-  { title: 'Prep checklist', body: 'A structured checklist before you walk in — breathing, key points, posture.', icon: 'check' },
-  { title: 'Free voice playback', body: 'Hear any phrase read aloud through your browser, at no extra cost.', icon: 'speaker' },
-  { title: 'Practice tracker', body: 'See how many scenarios you\'ve rehearsed. Simple streaks, no pressure.', icon: 'trend' },
+  { title: 'Scenario prep', body: 'Describe the conversation you\'re dreading, get exact talking points built for it.', icon: 'target', page: 'scenario' },
+  { title: 'Tone coaching', body: 'Not just what to say — where to pause, what to emphasize, how it should sound.', icon: 'wave', page: 'scenario' },
+  { title: 'Cultural context', body: 'How direct is too direct, in the country you\'re actually speaking to.', icon: 'globe', page: 'scenario' },
+  { title: 'Personal phrasebook', body: 'Save the lines that worked. Build your own arsenal over time.', icon: 'bookmark', page: 'phrasebook' },
+  { title: 'Phrase library', body: 'Hundreds of ready lines by situation — browse instantly, no generation needed.', icon: 'library', page: 'library' },
+  { title: 'Prep checklist', body: 'A structured checklist before you walk in — breathing, key points, posture.', icon: 'check', page: 'checklist' },
+  { title: 'Free voice playback', body: 'Hear any phrase read aloud through your browser, at no extra cost.', icon: 'speaker', page: 'library' },
+  { title: 'Practice tracker', body: 'See how many scenarios you\'ve rehearsed. Simple streaks, no pressure.', icon: 'trend', page: 'checklist' },
 ];
 
 function FeatureIcon({ type, color, size = 22 }) {
@@ -791,7 +791,8 @@ export default function App() {
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20 }}>
               {FEATURES.map((f, i) => (
-                <div key={i} className="premium-card" style={{ padding: 22, borderRadius: 14, background: '#FFF' }}>
+                <div key={i} className="premium-card" onClick={() => setPage(f.page)}
+                  style={{ padding: 22, borderRadius: 14, background: '#FFF', cursor: 'pointer' }}>
                   <div style={{ width: 42, height: 42, borderRadius: 10, background: SKY_PALE, marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <FeatureIcon type={f.icon} color={SKY_DEEP} />
                   </div>
