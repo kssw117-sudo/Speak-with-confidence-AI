@@ -305,6 +305,7 @@ export default function App() {
   const [licenseError, setLicenseError] = useState('');
   const [showHelpBubble, setShowHelpBubble] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
 
   // Лёгкий "поп"-звук для открытия/закрытия окошка подсказки — тот же
   // паттерн, что используется во всех пяти остальных продуктах
@@ -482,6 +483,18 @@ export default function App() {
     }
   }
 
+  // Достижения — считаются на лету из уже отслеживаемых данных,
+  // никакого нового хранилища не требуется
+  const totalGenerations = freeTrialCount + dailyCount;
+  const ACHIEVEMENTS = [
+    { label: 'First scenario prepped', done: totalGenerations >= 1 },
+    { label: 'Phrase collector (5+ saved)', done: savedPhrases.length >= 5 },
+    { label: 'Checklist regular (all items checked)', done: checkedItems.length >= 6 },
+    { label: 'Dedicated practicer (10+ rehearsals)', done: practiceCount >= 10 },
+    { label: 'Fluent tested', done: !!quizResult },
+  ];
+  const unlockedCount = ACHIEVEMENTS.filter(a => a.done).length;
+
   return (
     <div style={{ minHeight: '100vh', background: BG, color: INK, fontFamily: "'Inter', sans-serif" }}>
       <style>{`
@@ -529,12 +542,28 @@ export default function App() {
             </svg>
             <span className="logo-text" style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 17 }}>Speak With Confidence</span>
           </div>
-          <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(v => !v)} aria-label="Menu"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', alignItems: 'center', justifyContent: 'center', width: 36, height: 36 }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={INK} strokeWidth="2" strokeLinecap="round">
-              {mobileMenuOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <><path d="M3 6h18" /><path d="M3 12h18" /><path d="M3 18h18" /></>}
-            </svg>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button onClick={() => setAccountOpen(v => !v)} aria-label="Your account" style={{
+              background: accountOpen ? SKY_PALE : 'none', border: `1.5px solid ${accountOpen ? SKY : LINE}`, borderRadius: 999,
+              cursor: 'pointer', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={accountOpen ? SKY_DEEP : INK} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7" />
+              </svg>
+              {unlockedCount > 0 && (
+                <span style={{ position: 'absolute', top: -4, right: -4, background: SKY, color: '#FFF', fontSize: 9, fontWeight: 700, width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {unlockedCount}
+                </span>
+              )}
+            </button>
+            <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(v => !v)} aria-label="Menu"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', alignItems: 'center', justifyContent: 'center', width: 36, height: 36 }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={INK} strokeWidth="2" strokeLinecap="round">
+                {mobileMenuOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <><path d="M3 6h18" /><path d="M3 12h18" /><path d="M3 18h18" /></>}
+              </svg>
+            </button>
+          </div>
         </div>
         <nav className="desktop-nav" style={{ gap: 10, justifyContent: 'center', padding: '14px 0' }}>
           {PAGES.slice(1).map(p => (
@@ -557,6 +586,56 @@ export default function App() {
           ))}
         </nav>
       </header>
+
+      {accountOpen && (
+        <div style={{
+          position: 'fixed', top: 70, right: 20, width: 300, maxWidth: 'calc(100vw - 40px)',
+          background: '#FFF', borderRadius: 14, padding: 20, boxShadow: '0 12px 36px rgba(0,0,0,0.15)',
+          border: `1px solid ${LINE}`, zIndex: 50,
+        }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: INK, margin: '0 0 4px' }}>Your progress</p>
+          <p style={{ fontSize: 11.5, color: INK_SOFT, margin: '0 0 16px' }}>
+            {unlocked ? 'Access unlocked' : `${freeTrialCount} of ${FREE_TRIAL_LIMIT} free previews used`}
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 18 }}>
+            <div style={{ background: SKY_PALE, borderRadius: 10, padding: '10px 12px' }}>
+              <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 20, color: SKY_DEEP }}>{totalGenerations}</div>
+              <div style={{ fontSize: 10.5, color: INK_SOFT }}>scenarios prepped</div>
+            </div>
+            <div style={{ background: SKY_PALE, borderRadius: 10, padding: '10px 12px' }}>
+              <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 20, color: SKY_DEEP }}>{practiceCount}</div>
+              <div style={{ fontSize: 10.5, color: INK_SOFT }}>times rehearsed</div>
+            </div>
+            <div style={{ background: SKY_PALE, borderRadius: 10, padding: '10px 12px' }}>
+              <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 20, color: SKY_DEEP }}>{savedPhrases.length}</div>
+              <div style={{ fontSize: 10.5, color: INK_SOFT }}>phrases saved</div>
+            </div>
+            <div style={{ background: SKY_PALE, borderRadius: 10, padding: '10px 12px' }}>
+              <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 20, color: SKY_DEEP }}>{checkedItems.length}</div>
+              <div style={{ fontSize: 10.5, color: INK_SOFT }}>checklist items done</div>
+            </div>
+          </div>
+
+          <p style={{ fontSize: 11, fontWeight: 700, color: INK, textTransform: 'uppercase', letterSpacing: '0.04em', margin: '0 0 10px' }}>
+            Achievements ({unlockedCount}/{ACHIEVEMENTS.length})
+          </p>
+          <div style={{ display: 'grid', gap: 8 }}>
+            {ACHIEVEMENTS.map((a, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: a.done ? 1 : 0.4 }}>
+                <span style={{
+                  width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
+                  background: a.done ? SKY : '#FFF', border: `1.5px solid ${a.done ? SKY : LINE}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {a.done && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
+                </span>
+                <span style={{ fontSize: 12, color: INK }}>{a.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {mobileMenuOpen && (
         <div style={{ position: 'sticky', top: 65, background: '#FFF', borderBottom: `1px solid ${LINE}`, zIndex: 9, padding: '8px 20px 16px' }}>
@@ -645,11 +724,11 @@ export default function App() {
             <div className="marquee-track" style={{ gap: 28 }}>
               {[...Array(2)].flatMap((_, dup) =>
                 [
-                  { n: 1, caption: 'Steady on both sides of the table.' },
-                  { n: 2, caption: 'Calm before the door opens.' },
-                  { n: 3, caption: 'Your voice, already prepared.' },
-                  { n: 4, caption: 'Where the words actually happen.' },
-                  { n: 5, caption: 'First words, already right.' },
+                  { n: 1, caption: 'Steady on both sides of the table' },
+                  { n: 2, caption: 'Calm before the door opens' },
+                  { n: 3, caption: 'Your voice, already prepared' },
+                  { n: 4, caption: 'Where the words actually happen' },
+                  { n: 5, caption: 'First words, already right' },
                 ].map(({ n, caption }) => (
                   <div key={`${dup}-${n}`} style={{ width: 420, flexShrink: 0 }}>
                     <img
