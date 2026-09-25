@@ -34,6 +34,21 @@ function scoreToProficiency(correctCount) {
   return 'Fluent';
 }
 
+// Озвучка фраз из библиотеки/фразника — они всегда на английском,
+// поэтому явно задаём язык и по возможности берём качественный
+// англоязычный голос, иначе браузер может читать неправильно
+function buildUtterance(text) {
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'en-US';
+  utterance.rate = 0.95;
+  const voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+  const enVoice = voices.find(v => v.lang === 'en-US' && /Google|Natural|Neural/i.test(v.name))
+    || voices.find(v => v.lang === 'en-US')
+    || voices.find(v => v.lang && v.lang.startsWith('en'));
+  if (enVoice) utterance.voice = enVoice;
+  return utterance;
+}
+
 const ROLE_KEYWORDS = {
   'Difficult clients': ['client', 'customer', 'freelance', 'consultant', 'agency', 'service', 'sales', 'account', 'support'],
   'Giving feedback': ['manager', 'lead', 'teacher', 'coach', 'director', 'supervisor', 'mentor', 'teamlead'],
@@ -306,6 +321,32 @@ export default function App() {
   const [showHelpBubble, setShowHelpBubble] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [speakingText, setSpeakingText] = useState(null);
+  const [speakingPaused, setSpeakingPaused] = useState(false);
+
+  function toggleSpeak(text) {
+    if (!window.speechSynthesis) return;
+    if (speakingText === text) {
+      // Та же самая фраза — переключаем пауза/продолжить
+      if (speakingPaused) {
+        window.speechSynthesis.resume();
+        setSpeakingPaused(false);
+      } else {
+        window.speechSynthesis.pause();
+        setSpeakingPaused(true);
+      }
+      return;
+    }
+    // Другая фраза — обрываем текущую и начинаем новую
+    window.speechSynthesis.cancel();
+    const utterance = buildUtterance(text);
+    utterance.onend = () => { setSpeakingText(null); setSpeakingPaused(false); };
+    utterance.onerror = () => { setSpeakingText(null); setSpeakingPaused(false); };
+    setSpeakingText(text);
+    setSpeakingPaused(false);
+    window.speechSynthesis.speak(utterance);
+  }
+
 
   // Лёгкий "поп"-звук для открытия/закрытия окошка подсказки — тот же
   // паттерн, что используется во всех пяти остальных продуктах
@@ -772,8 +813,14 @@ export default function App() {
               </h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
                 {SCENARIOS.map((s, i) => (
-                  <div key={i} className="premium-card" style={{ padding: 24, borderRadius: 14, background: '#FFF' }}>
-                    <div style={{ fontSize: 11, color: SKY_DEEP, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 10 }}>{s.tag}</div>
+                  <div key={i} className="premium-card" onClick={() => toggleSpeak(s.line)}
+                    style={{ padding: 24, borderRadius: 14, background: '#FFF', cursor: 'pointer' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                      <div style={{ fontSize: 11, color: SKY_DEEP, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.tag}</div>
+                      <span style={{ fontSize: 15, color: SKY_DEEP }}>
+                        {speakingText === s.line && !speakingPaused ? '\u23F8' : speakingText === s.line && speakingPaused ? '\u25B6' : '\u{1F50A}'}
+                      </span>
+                    </div>
                     <p style={{ fontSize: 14.5, lineHeight: 1.55, margin: 0, fontStyle: 'italic' }}>&ldquo;{s.line}&rdquo;</p>
                   </div>
                 ))}
@@ -958,11 +1005,11 @@ export default function App() {
                       <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>{p}</p>
                       <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                         <button
-                          onClick={() => { const u = new SpeechSynthesisUtterance(p); window.speechSynthesis.speak(u); }}
-                          aria-label="Listen"
+                          onClick={() => toggleSpeak(p)}
+                          aria-label={speakingText === p && !speakingPaused ? 'Pause' : 'Listen'}
                           style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: SKY_DEEP }}
                         >
-                          &#128266;
+                          {speakingText === p && !speakingPaused ? '\u23F8' : speakingText === p && speakingPaused ? '\u25B6' : '\u{1F50A}'}
                         </button>
                         <button
                           onClick={() => toggleSave(p)}
@@ -1069,8 +1116,10 @@ export default function App() {
                 }}>
                   <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>{p}</p>
                   <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                    <button onClick={() => { const u = new SpeechSynthesisUtterance(p); window.speechSynthesis.speak(u); }} aria-label="Listen"
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: SKY_DEEP }}>&#128266;</button>
+                    <button onClick={() => toggleSpeak(p)} aria-label={speakingText === p && !speakingPaused ? 'Pause' : 'Listen'}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: SKY_DEEP }}>
+                      {speakingText === p && !speakingPaused ? '\u23F8' : speakingText === p && speakingPaused ? '\u25B6' : '\u{1F50A}'}
+                    </button>
                     <button onClick={() => toggleSave(p)} aria-label="Remove"
                       style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: SKY_DEEP }}>&#10005;</button>
                   </div>
@@ -1085,7 +1134,7 @@ export default function App() {
       <footer style={{ borderTop: `1px solid ${LINE}`, padding: '32px 24px', marginTop: 60 }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <p style={{ fontFamily: "'Fraunces', serif", fontStyle: 'normal', fontSize: 15, color: SKY_DEEP, textAlign: 'center', margin: '0 0 24px' }}>
-            Confidence isn't luck. It's preparation.
+            Confidence isn't luck. It's preparation
           </p>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
             <span style={{ fontSize: 12, color: INK_SOFT }}>Powered by Claude &middot; Plainwork by Ksenia</span>
