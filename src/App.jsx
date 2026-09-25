@@ -501,8 +501,9 @@ export default function App() {
         .result-card-anim { animation: cardFadeIn 0.3s ease both; }
         @keyframes statPop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .stat-pop { animation: statPop 0.5s cubic-bezier(0.22,1,0.36,1) both; }
-        @keyframes marqueeScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        .marquee-track { display: flex; width: max-content; animation: marqueeScroll 42s linear infinite; }
+        @keyframes marqueeScroll { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
+        .marquee-track { display: flex; width: max-content; animation: marqueeScroll 42s linear infinite; will-change: transform; backface-visibility: hidden; transform: translateZ(0); }
+        .marquee-track img { image-rendering: -webkit-optimize-contrast; backface-visibility: hidden; transform: translateZ(0); }
         .marquee-wrap:hover .marquee-track { animation-play-state: paused; }
         .desktop-nav { display: flex; }
         .mobile-menu-btn { display: none; }
