@@ -640,25 +640,27 @@ export default function App() {
             </div>
           </div>
 
-          {/* ---------- PHOTO GRID (статично, с подписями) ---------- */}
-          <div style={{ padding: '48px 24px', background: '#FAFBFC', borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}` }}>
-            <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 28 }}>
-              {[
-                { n: 1, caption: 'Steady on both sides of the table.' },
-                { n: 2, caption: 'Calm before the door opens.' },
-                { n: 3, caption: 'Your voice, already prepared.' },
-                { n: 4, caption: 'Where the words actually happen.' },
-                { n: 5, caption: 'First words, already right.' },
-              ].map(({ n, caption }) => (
-                <div key={n} style={{ width: 420, maxWidth: '100%' }}>
-                  <img
-                    src={`/images/hero${n}.jpg`}
-                    alt={caption}
-                    style={{ width: '100%', height: 236, objectFit: 'cover', display: 'block' }}
-                  />
-                  <p style={{ fontSize: 13, color: INK_SOFT, textAlign: 'center', marginTop: 10 }}>{caption}</p>
-                </div>
-              ))}
+          {/* ---------- PHOTO MARQUEE (с подписями) ---------- */}
+          <div className="marquee-wrap" style={{ overflow: 'hidden', padding: '48px 0', background: '#FAFBFC', borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}` }}>
+            <div className="marquee-track" style={{ gap: 28 }}>
+              {[...Array(2)].flatMap((_, dup) =>
+                [
+                  { n: 1, caption: 'Steady on both sides of the table.' },
+                  { n: 2, caption: 'Calm before the door opens.' },
+                  { n: 3, caption: 'Your voice, already prepared.' },
+                  { n: 4, caption: 'Where the words actually happen.' },
+                  { n: 5, caption: 'First words, already right.' },
+                ].map(({ n, caption }) => (
+                  <div key={`${dup}-${n}`} style={{ width: 420, flexShrink: 0 }}>
+                    <img
+                      src={`/images/hero${n}.jpg`}
+                      alt={caption}
+                      style={{ width: '100%', height: 236, objectFit: 'cover', display: 'block' }}
+                    />
+                    <p style={{ fontSize: 13, color: INK, fontWeight: 600, textAlign: 'center', marginTop: 10 }}>{caption}</p>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
