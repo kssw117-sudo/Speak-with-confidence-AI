@@ -326,19 +326,16 @@ export default function App() {
 
   function toggleSpeak(text) {
     if (!window.speechSynthesis) return;
+    // Пауза/resume в Web Speech API нестабильна в некоторых браузерах —
+    // "залипает" и ломает все последующие попытки озвучить что-то новое.
+    // Поэтому вместо настоящей паузы делаем надёжный стоп/старт.
+    window.speechSynthesis.cancel();
     if (speakingText === text) {
-      // Та же самая фраза — переключаем пауза/продолжить
-      if (speakingPaused) {
-        window.speechSynthesis.resume();
-        setSpeakingPaused(false);
-      } else {
-        window.speechSynthesis.pause();
-        setSpeakingPaused(true);
-      }
+      // Повторный клик по той же фразе — просто останавливаем
+      setSpeakingText(null);
+      setSpeakingPaused(false);
       return;
     }
-    // Другая фраза — обрываем текущую и начинаем новую
-    window.speechSynthesis.cancel();
     const utterance = buildUtterance(text);
     utterance.onend = () => { setSpeakingText(null); setSpeakingPaused(false); };
     utterance.onerror = () => { setSpeakingText(null); setSpeakingPaused(false); };
@@ -818,7 +815,7 @@ export default function App() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                       <div style={{ fontSize: 11, color: SKY_DEEP, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.tag}</div>
                       <span style={{ fontSize: 15, color: SKY_DEEP }}>
-                        {speakingText === s.line && !speakingPaused ? '\u23F8' : speakingText === s.line && speakingPaused ? '\u25B6' : '\u{1F50A}'}
+                        {speakingText === s.line ? '\u23F9' : '\u{1F50A}'}
                       </span>
                     </div>
                     <p style={{ fontSize: 14.5, lineHeight: 1.55, margin: 0, fontStyle: 'italic' }}>&ldquo;{s.line}&rdquo;</p>
@@ -1006,10 +1003,10 @@ export default function App() {
                       <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                         <button
                           onClick={() => toggleSpeak(p)}
-                          aria-label={speakingText === p && !speakingPaused ? 'Pause' : 'Listen'}
+                          aria-label={speakingText === p ? 'Stop' : 'Listen'}
                           style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: SKY_DEEP }}
                         >
-                          {speakingText === p && !speakingPaused ? '\u23F8' : speakingText === p && speakingPaused ? '\u25B6' : '\u{1F50A}'}
+                          {speakingText === p ? '\u23F9' : '\u{1F50A}'}
                         </button>
                         <button
                           onClick={() => toggleSave(p)}
@@ -1116,9 +1113,9 @@ export default function App() {
                 }}>
                   <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>{p}</p>
                   <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                    <button onClick={() => toggleSpeak(p)} aria-label={speakingText === p && !speakingPaused ? 'Pause' : 'Listen'}
+                    <button onClick={() => toggleSpeak(p)} aria-label={speakingText === p ? 'Stop' : 'Listen'}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: SKY_DEEP }}>
-                      {speakingText === p && !speakingPaused ? '\u23F8' : speakingText === p && speakingPaused ? '\u25B6' : '\u{1F50A}'}
+                      {speakingText === p ? '\u23F9' : '\u{1F50A}'}
                     </button>
                     <button onClick={() => toggleSave(p)} aria-label="Remove"
                       style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: SKY_DEEP }}>&#10005;</button>
