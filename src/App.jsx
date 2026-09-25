@@ -501,6 +501,9 @@ export default function App() {
         .result-card-anim { animation: cardFadeIn 0.3s ease both; }
         @keyframes statPop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .stat-pop { animation: statPop 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+        @keyframes marqueeScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        .marquee-track { display: flex; width: max-content; animation: marqueeScroll 42s linear infinite; }
+        .marquee-wrap:hover .marquee-track { animation-play-state: paused; }
         .desktop-nav { display: flex; }
         .mobile-menu-btn { display: none; }
         .logo-text { display: inline; }
@@ -633,6 +636,22 @@ export default function App() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* ---------- PHOTO MARQUEE ---------- */}
+          <div className="marquee-wrap" style={{ overflow: 'hidden', padding: '48px 0', background: '#FAFBFC', borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}` }}>
+            <div className="marquee-track" style={{ gap: 20 }}>
+              {[...Array(2)].flatMap((_, dup) =>
+                [1, 2, 3, 4, 5].map(n => (
+                  <img
+                    key={`${dup}-${n}`}
+                    src={`/images/hero${n}.jpg`}
+                    alt=""
+                    style={{ width: 420, height: 236, objectFit: 'cover', borderRadius: 16, boxShadow: '0 8px 24px rgba(20,20,30,0.08)', flexShrink: 0 }}
+                  />
+                ))
+              )}
             </div>
           </div>
 
