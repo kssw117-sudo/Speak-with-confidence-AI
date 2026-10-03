@@ -1143,9 +1143,9 @@ export default function App() {
           <p style={{ fontFamily: "'Fraunces', serif", fontStyle: 'normal', fontSize: 15, color: SKY_DEEP, textAlign: 'center', margin: '0 0 24px' }}>
             Confidence isn't luck. It's preparation
           </p>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
             <span style={{ fontSize: 12, color: INK_SOFT }}>Powered by Claude &middot; Plainwork by Ksenia</span>
-            <div style={{ display: 'flex', gap: 18 }}>
+            <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', justifyContent: 'center' }}>
               <a href="/terms.html" style={{ fontSize: 12, color: INK_SOFT }}>Terms</a>
               <a href="/privacy.html" style={{ fontSize: 12, color: INK_SOFT }}>Privacy</a>
               <a href="/refund.html" style={{ fontSize: 12, color: INK_SOFT }}>Refunds</a>
@@ -1159,6 +1159,9 @@ export default function App() {
             <a href="https://plainwork.website/" target="_blank" rel="noopener noreferrer" style={{ color: SKY_DEEP, fontWeight: 600 }}>
               More useful tools at Plainwork &rarr;
             </a>
+          </p>
+          <p style={{ fontSize: 11, color: INK_SOFT, textAlign: 'center', marginTop: 18, opacity: 0.8 }}>
+            Грезина Ксения Викторовна (Ksenia Grezina) &middot; Tax ID (ИНН) 710607167655
           </p>
         </div>
       </footer>
