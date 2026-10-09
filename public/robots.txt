@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://swc.plainwork.website/sitemap.xml
