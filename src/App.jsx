@@ -563,6 +563,11 @@ export default function App() {
         .stat-pop { animation: statPop 0.5s cubic-bezier(0.22,1,0.36,1) both; }
         @keyframes marqueeScroll { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
         .marquee-track { display: flex; width: max-content; animation: marqueeScroll 42s linear infinite; will-change: transform; backface-visibility: hidden; transform: translateZ(0); }
+        @keyframes helpBubbleBounce { 0%, 100% { transform: translateY(0); } 15% { transform: translateY(-10px); } 30% { transform: translateY(0); } 40% { transform: translateY(-5px); } 50% { transform: translateY(0); } }
+        .help-bubble-btn:hover { animation: helpBubbleBounce 0.9s ease-in-out infinite; }
+        @keyframes logoBubbleBounce { 0%, 100% { transform: translateY(0); } 20% { transform: translateY(-5px); } 40% { transform: translateY(0); } }
+        .logo-bubble { animation: logoBubbleBounce 2.4s ease-in-out infinite; transform-origin: bottom center; }
+        .logo-bubble:hover { animation-play-state: paused; }
         .marquee-track img { image-rendering: -webkit-optimize-contrast; backface-visibility: hidden; transform: translateZ(0); }
         .marquee-wrap:hover .marquee-track { animation-play-state: paused; }
         .desktop-nav { display: flex; }
@@ -582,7 +587,7 @@ export default function App() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => setPage('home')}>
-            <svg width="28" height="28" viewBox="0 0 200 190">
+            <svg className="logo-bubble" width="28" height="28" viewBox="0 0 200 190">
               <rect x="15" y="15" width="170" height="115" rx="40" fill={SKY} />
               <polygon points="55,130 40,165 80,132" fill={SKY} />
               <polyline points="65,72 92,100 140,50" stroke="#FFF" strokeWidth="16" fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -1173,6 +1178,7 @@ export default function App() {
           setShowHelpBubble(v => !v);
         }}
         aria-label="Need help?"
+        className={showHelpBubble ? '' : 'help-bubble-btn'}
         style={{
           position: 'fixed', bottom: 20, right: 20, width: 48, height: 48, borderRadius: '50%',
           background: SKY, color: '#FFF', border: 'none',
