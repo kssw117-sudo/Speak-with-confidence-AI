@@ -23,6 +23,13 @@
     .links { font-size: 12px; color: #6B6B72; }
     .links a { color: #6B6B72; margin: 0 8px; }
     iframe { border: none; border-radius: 10px; }
+    .refund-overlay { display:none; position:fixed; inset:0; background:rgba(26,26,30,0.55); z-index:100; align-items:center; justify-content:center; padding:24px; }
+    .refund-box { background:#FFFFFF; border:1px solid #E5E7EB; border-radius:16px; padding:32px; max-width:440px; width:100%; position:relative; max-height:80vh; overflow-y:auto; box-shadow: 0 8px 24px rgba(20,20,30,0.12); text-align:left; }
+    .refund-x { position:absolute; top:14px; right:16px; background:none; border:none; font-size:22px; color:#6B6B72; cursor:pointer; line-height:1; }
+    .refund-eyebrow { font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:#3D8AC7; margin-bottom:10px; }
+    .refund-h { font-family: Georgia, serif; font-size:20px; margin:0 0 14px; color:#1A1A1E; }
+    .refund-p { font-size:14px; color:#1A1A1E; margin:0 0 12px; line-height:1.6; }
+    .refund-p a { color:#3D8AC7; }
   </style>
 </head>
 <body>
@@ -66,12 +73,26 @@
     <div class="links">
       <a href="/terms.html">Terms</a>
       <a href="/privacy.html">Privacy</a>
-      <a href="/refund.html">Refunds</a>
+      <a href="#" onclick="toggleRefund(true);return false;">Refunds</a>
     </div>
 
     <p style="font-size: 11px; color: #6B6B72; text-align: center; margin-top: 18px; opacity: 0.8;">
       Грезина Ксения Викторовна (Ksenia Grezina) &middot; Tax ID (ИНН) 710607167655
     </p>
   </div>
+
+  <div id="refundModal" class="refund-overlay" onclick="if(event.target===this)toggleRefund(false)">
+    <div class="refund-box">
+      <button class="refund-x" onclick="toggleRefund(false)" aria-label="Close">&times;</button>
+      <div class="refund-eyebrow">Refund Policy</div>
+      <h2 class="refund-h">14-Day Money-Back Guarantee</h2>
+      <p class="refund-p">If Speak With Confidence AI isn't the right fit for you, you can request a full refund within 14 days of your purchase &mdash; no questions asked.</p>
+      <p class="refund-p"><strong>How to request:</strong> Email <a href="mailto:kssw117@gmail.com">kssw117@gmail.com</a> with the email you used to purchase. Refunds are processed within 2 business days, back to your original payment method.</p>
+      <p class="refund-p"><strong>After a refund:</strong> Lifetime access to Speak With Confidence AI is deactivated.</p>
+    </div>
+  </div>
+  <script>
+    function toggleRefund(show) { document.getElementById('refundModal').style.display = show ? 'flex' : 'none'; }
+  </script>
 </body>
 </html>
