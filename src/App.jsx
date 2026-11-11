@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from 'react';
 
+// Ответ сервера о пробной попытке или дневном лимите (считаются на сервере).
+function guardError(data) {
+  if (data && (data.code === 'trial_used' || data.code === 'limit_reached')) {
+    const e = new Error(data.error || data.code);
+    e.guardMessage = data.error;
+    e.guardCode = data.code;
+    return e;
+  }
+  return null;
+}
+
+
 const SKY = '#5EA8E0';
 const SKY_DEEP = '#3D8AC7';
 const SKY_PALE = '#EAF4FC';
@@ -510,6 +522,7 @@ export default function App() {
         body: JSON.stringify({ situation, userRole, outputLang, proficiency, licenseCode: localStorage.getItem('swc_licenseCode') || '' }),
       });
       const data = await res.json();
+      { const ge = guardError(data); if (ge && ge.guardCode === 'trial_used') { localStorage.setItem('swc_free_trial_count', String(FREE_TRIAL_LIMIT)); setFreeTrialCount(FREE_TRIAL_LIMIT); } }
       if (!res.ok) {
         setGenerateError(data.error || 'Something went wrong. Please try again.');
         return;
