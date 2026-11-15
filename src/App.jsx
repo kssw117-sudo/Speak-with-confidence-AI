@@ -1334,7 +1334,7 @@ export default function App() {
               ].map(st => (
                 <div key={st.n} className="premium-card" onClick={() => setPage(st.page)}
                   style={{ padding: 26, borderRadius: 16, background: '#FFF', cursor: 'pointer', position: 'relative' }}>
-                  <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 44, color: SKY_PALE, lineHeight: 1, marginBottom: 6, WebkitTextStroke: `1.5px ${SKY}` }}>{st.n}</div>
+                  <div style={{ width: 42, height: 42, borderRadius: 10, background: SKY_PALE, marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 17, color: SKY_DEEP }}>{st.n}</div>
                   <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 8 }}>{st.title}</div>
                   <div style={{ fontSize: 13.5, color: INK_SOFT, lineHeight: 1.55, marginBottom: 14 }}>{st.body}</div>
                   <div style={{ fontSize: 13, color: SKY_DEEP, fontWeight: 600 }}>{st.cta} &rarr;</div>
