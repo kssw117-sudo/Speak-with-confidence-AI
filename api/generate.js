@@ -110,8 +110,18 @@ export default async function handler(req, res) {
   if (req.method === 'GET' && req.query && req.query.selftest) return selfTest(req, res);
   if (req.method !== 'POST') return innerHandler(req, res);
   const body = req.body || {};
-  // Ролевая игра и пробное собеседование — только с кодом доступа (без пробных попыток).
-  const g = await guard(req, body.licenseCode, !body.licenseCode && !body.mode);
+  // Подписка на бесплатный PDF — без кода доступа
+  if (body.mode === 'subscribe') return handleSubscribe(req, res, body);
+
+  // Бесплатная пробная ролевая игра: без кода, до 3 реплик + разбор, по IP раз в 30 дней
+  const isTrialRoleplay = !body.licenseCode && body.trial === true && (body.mode === 'roleplay' || body.mode === 'roleplay-feedback');
+  let g;
+  if (isTrialRoleplay) {
+    g = await roleplayTrialGuard(req, body);
+  } else {
+    // Остальная практика — только с кодом доступа (без пробных попыток).
+    g = await guard(req, body.licenseCode, !body.licenseCode && !body.mode);
+  }
   if (!g.ok) return res.status(g.status).json(g.body);
 
   // Если генерация не удалась (ответ с ошибкой) -- возвращаем списанное.
@@ -128,6 +138,46 @@ export default async function handler(req, res) {
   }
 }
 // ============================ конец защиты ============================
+
+// Пробная ролевая игра: 1 начало + 3 ответа + 1 разбор = 5 запросов к ИИ на IP за 30 дней
+const RP_TRIAL_TURNS = 3;
+const RP_TRIAL_CALLS = 5;
+async function roleplayTrialGuard(req, body) {
+  const msgs = Array.isArray(body.messages) ? body.messages : [];
+  const userTurns = msgs.filter(m => m && m.role === 'user').length;
+  if (body.mode === 'roleplay' && userTurns > RP_TRIAL_TURNS) {
+    return { ok: false, status: 403, body: { error: 'That was the end of your free role-play. Enter your access code to keep going.', code: 'trial_used' } };
+  }
+  if (!(REDIS_URL && REDIS_TOKEN)) return { ok: true, refund: noRefund };
+  try {
+    const t = await takeOne(`${GUARD.product}:rptrial:${clientIp(req)}`, RP_TRIAL_CALLS, TRIAL_TTL);
+    if (!t.ok) return { ok: false, status: 403, body: { error: 'Your free role-play is used. Enter your access code to keep practicing.', code: 'trial_used' } };
+    return { ok: true, refund: t.refund };
+  } catch (e) {
+    console.error('Role-play trial check failed, allowing request:', e.message);
+    return { ok: true, refund: noRefund };
+  }
+}
+
+// Бесплатный PDF за email: адрес сохраняется в Redis (список swc:subscribers)
+async function handleSubscribe(req, res, body) {
+  const email = String(body.email || '').trim().toLowerCase().slice(0, 200);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
+  const pdf = '/salary-talk-phrasebook.pdf';
+  if (!(REDIS_URL && REDIS_TOKEN)) return res.status(200).json({ ok: true, pdf });
+  try {
+    const day = new Date().toISOString().slice(0, 10);
+    const t = await takeOne(`${GUARD.product}:sub:${clientIp(req)}:${day}`, 5, 93600);
+    if (!t.ok) return res.status(429).json({ error: 'Too many requests today. Please try again tomorrow.' });
+    const source = String(body.source || 'site').slice(0, 60);
+    const [added] = await redis([['SADD', `${GUARD.product}:subscribers`, email]]);
+    if (added === 1) await redis([['RPUSH', `${GUARD.product}:subscribers:log`, `${day} | ${email} | ${source}`]]);
+  } catch (e) {
+    console.error('Subscribe failed:', e.message);
+  }
+  return res.status(200).json({ ok: true, pdf });
+}
+
 
 // ===================== Ролевая игра и пробное собеседование =====================
 const FAST_MODEL = 'claude-haiku-4-5-20251001';
