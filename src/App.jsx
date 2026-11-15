@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { PHRASE_CATEGORIES, PHRASE_GROUPS } from './phrases.js';
 
 // Ответ сервера о пробной попытке или дневном лимите (считаются на сервере).
 function guardError(data) {
@@ -85,12 +86,21 @@ function sortCategoriesByRole(categories, role) {
 const PAGES = [
   { id: 'home', label: 'Home' },
   { id: 'scenario', label: 'Scenario prep', icon: 'target' },
+  { id: 'roleplay', label: 'Role-play', icon: 'chat' },
+  { id: 'interview', label: 'Mock interview', icon: 'mic' },
+  { id: 'voice', label: 'Voice practice', icon: 'wave' },
   { id: 'library', label: 'Phrase library', icon: 'library' },
   { id: 'checklist', label: 'Prep checklist', icon: 'check' },
   { id: 'phrasebook', label: 'My phrasebook', icon: 'notebook' },
 ];
 
 const FEATURES = [
+  { title: 'AI role-play', body: 'Practice the real conversation. The AI plays your manager, client or interviewer and pushes back.', icon: 'chat', page: 'roleplay',
+    fullBody: 'Pick who you need to talk to and what is at stake. The AI stays in character, reacts to what you actually say, raises real objections and asks follow-up questions. Type or speak your answers. When you finish, you get a score, what you did well, what to fix, and stronger versions of your own lines.' },
+  { title: 'Mock interview', body: 'Five realistic questions for your exact job, promotion or client call, then a scored review.', icon: 'mic', page: 'interview',
+    fullBody: 'Tell it what the interview is for, a job, a promotion, a client or freelance project call, and you get five questions a real interviewer would ask, from easy to tricky. Answer each one by typing or speaking. Then you get an overall score, feedback on every answer and a stronger sample answer built from what you said.' },
+  { title: 'Voice practice', body: 'Say it out loud. Repeat phrases after a native voice, or speak freely and get AI feedback.', icon: 'wave', page: 'voice',
+    fullBody: 'Two ways to train your voice. Repeat after me: listen to a phrase, say it, and see which words came through clearly. Speak freely: pick a task like introducing yourself or explaining a delay, talk for up to two minutes, and see your pace and filler words. With your access code, the AI then scores how it sounded and gives you a stronger version to practice.' },
   { title: 'Scenario prep', body: 'Describe the conversation you\'re dreading, get exact talking points built for it.', icon: 'target', page: 'scenario',
     fullBody: 'You type the situation in plain, messy language — no need to explain it neatly. The AI reads it and builds five talking points specifically for that conversation: an opening line, how to state your position, a response to the pushback you\'re most likely to get, a way to hold firm, and a way to close well either direction. It\'s not generic advice — it\'s built around what you actually described.' },
   { title: 'Tone coaching', body: 'Not just what to say — where to pause, what to emphasize, how it should sound.', icon: 'wave', page: 'scenario',
@@ -99,8 +109,8 @@ const FEATURES = [
     fullBody: 'What sounds confident in one culture can sound blunt or even rude in another. Alongside your talking points, you get a short read on how direct or formal the moment calls for — so you don\'t accidentally undersell yourself, or come across sharper than you meant to.' },
   { title: 'Personal phrasebook', body: 'Save the lines that worked. Build your own arsenal over time.', icon: 'bookmark', page: 'phrasebook',
     fullBody: 'Star any phrase from the library, and it lands here. Over time this becomes your own personal collection of lines that actually worked for you — not generic advice, but your own track record of what landed.' },
-  { title: 'Phrase library', body: 'Hundreds of ready lines by situation — browse instantly, no generation needed.', icon: 'library', page: 'library',
-    fullBody: '52 ready-made phrases across eight everyday situations — salary talks, difficult clients, interviews, declining requests, networking, feedback, asking for help, apologizing well. No waiting on AI, no cost — just browse, search, and use them straight away.' },
+  { title: 'Phrase library', body: '1,000+ ready lines for work and everyday life. Browse instantly, no generation needed.', icon: 'library', page: 'library',
+    fullBody: 'More than 1,000 ready-made phrases across 26 situations: salary talks, interviews, difficult clients, meetings, deadlines, remote calls, freelance projects, a new job, presentations, sales, setting boundaries, complaints and more. Search them, hear any line read aloud, and star the ones you want to keep.' },
   { title: 'Prep checklist', body: 'A structured checklist before you walk in — breathing, key points, posture.', icon: 'check', page: 'checklist',
     fullBody: 'A short, practical checklist to run through right before the conversation starts: say your opening line out loud once, name the outcome you actually want, think through the objection you\'re most afraid of, breathe, sit up straight, know your walk-away point. Plus a rehearsal timer and voice practice to actually say it out loud.' },
   { title: 'Free voice playback', body: 'Hear any phrase read aloud through your browser, at no extra cost.', icon: 'speaker', page: 'library',
@@ -128,6 +138,10 @@ function FeatureIcon({ type, color, size = 22 }) {
       return <svg {...common}><path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z" /><path d="M16 9a4.2 4.2 0 010 6M18.5 6.5a8 8 0 010 11" /></svg>;
     case 'trend':
       return <svg {...common}><path d="M4 17l5-5 4 4 7-8" /><path d="M15 8h5v5" /></svg>;
+    case 'chat':
+      return <svg {...common}><path d="M4 5.5h11a2 2 0 012 2v6a2 2 0 01-2 2H9l-4 3.5V15.5H4a2 2 0 01-2-2v-6a2 2 0 012-2z" /><path d="M17 9.5h3a2 2 0 012 2v5a2 2 0 01-2 2h-1v3l-3.5-3H12" /></svg>;
+    case 'mic':
+      return <svg {...common}><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5.5 11a6.5 6.5 0 0013 0M12 17.5V21M8.5 21h7" /></svg>;
     case 'notebook':
       return <svg {...common}><rect x="4" y="3.5" width="13" height="17" rx="1.5" /><path d="M7 3.5v17M15 6.5l5 1.5-3 12-5-1.5z" /></svg>;
     default:
@@ -150,100 +164,7 @@ const FAQS = [
   { q: 'What languages does it support?', a: 'Scenario prep works in 35 languages, pick one from a dropdown, and the AI writes your talking points, tone notes, and cultural context in that language. The static phrase library and prep checklist are in English for now.' },
 ];
 
-const PHRASE_CATEGORIES = [
-  {
-    name: 'Salary & raises',
-    phrases: [
-      "I'd like to talk about my compensation given what I've delivered this year.",
-      "Based on my research, the market rate for this role is higher than my current pay.",
-      "I'm not looking for a number right now — I want to understand what a path to X would look like.",
-      "I want to make sure I'm being paid in line with my impact, not just my tenure.",
-      "I've taken on X and Y since my last review, and I'd like that reflected in my pay.",
-      "What would need to be true for us to revisit this in three months?",
-      "I'm not comparing myself to anyone else on the team, just to what this role is worth.",
-    ],
-  },
-  {
-    name: 'Difficult clients',
-    phrases: [
-      "I hear you, and I want to get this right — walk me through exactly where it broke down.",
-      "That's fair feedback. Here's what I can fix, and here's what's outside what we agreed to.",
-      "I understand the frustration. Let's separate what's urgent from what's important here.",
-      "I don't think leaving solves the actual problem — can we try one more fix first?",
-      "I'd rather tell you the truth now than promise something I can't deliver.",
-      "Let's agree on what \"fixed\" actually looks like before I start.",
-      "I want this relationship to work, so tell me what would need to change.",
-    ],
-  },
-  {
-    name: 'Job interviews',
-    phrases: [
-      "That's a fair question. Here's a time I got it wrong, and what I changed afterward.",
-      "I'd frame my biggest strength as consistency under pressure, not raw speed.",
-      "Can you tell me more about what success looks like in this role after six months?",
-      "I'm looking for a place where I can own outcomes, not just execute tasks.",
-      "Honestly, that's still something I'm developing, here's how I'm working on it.",
-      "What does the team usually struggle with most, that I'd be walking into?",
-      "I turned down a similar offer because the scope didn't match what was promised.",
-    ],
-  },
-  {
-    name: 'Declining requests',
-    phrases: [
-      "I can't take this on right now without dropping something else — which would you prioritize?",
-      "That's not something I'm the right person for, but I know who might be.",
-      "I want to help, but I can't commit to that timeline honestly.",
-      "No is a complete sentence, but let me give you the reason anyway.",
-      "I could do this by Friday, or the other thing by Wednesday, not both.",
-      "That's outside what I agreed to take on, let's talk about what changed.",
-      "I'm going to say no this time, so I can actually say yes to the next one.",
-    ],
-  },
-  {
-    name: 'Networking & small talk',
-    phrases: [
-      "What's been the most interesting part of your work lately?",
-      "I'd love to hear more about how you ended up in this field.",
-      "That's a great point — I hadn't thought about it from that angle.",
-      "Do you have a card, or should we just connect after?",
-      "What are you working on that you're actually excited about right now?",
-      "I've been meaning to ask someone who'd actually know, how does that side of the industry work?",
-      "This has been a great conversation, I'd love to continue it sometime this week.",
-    ],
-  },
-  {
-    name: 'Giving feedback',
-    phrases: [
-      "Can I share something I noticed? It's meant to help, not criticize.",
-      "The intent was good, but the impact landed differently than you meant.",
-      "I want to be direct with you because I respect you enough not to soften this.",
-      "What would you do differently if you had this moment again?",
-      "This isn't about one mistake, it's a pattern I want to flag early.",
-      "You did a lot right here, and there's one thing I think could be stronger.",
-      "I'd rather you hear this from me now than find out some other way later.",
-    ],
-  },
-  {
-    name: 'Asking for help',
-    phrases: [
-      "I've tried a couple of things already, but I'm stuck and could use a second opinion.",
-      "Do you have twenty minutes this week to walk through this with me?",
-      "I don't want to guess on this one, can you tell me how you'd approach it?",
-      "This is outside what I know well, who would you go to for this?",
-      "I'm not asking you to do it for me, just to point me in the right direction.",
-    ],
-  },
-  {
-    name: 'Apologizing well',
-    phrases: [
-      "I got this wrong, and I want to tell you exactly what I'm doing differently.",
-      "There's no excuse that changes what happened, so I'll skip the explanation and just fix it.",
-      "I should have flagged this sooner, that's on me.",
-      "I understand if this changes how you see this going forward.",
-      "I'm not just sorry it happened, I'm sorry I didn't catch it earlier.",
-    ],
-  },
-];
+// Библиотека фраз (1000+) вынесена в src/phrases.js
 
 // Дневной лимит генераций для тех, кто уже разблокировал доступ кодом —
 // защита от злоупотребления одним купленным кодом, тот же паттерн, что
@@ -543,6 +464,390 @@ export default function App() {
     }
   }
 
+  // ===================== Ролевая игра и пробное собеседование =====================
+  // Доступны с кодом доступа. Каждый запрос к AI считается в дневном лимите.
+  const ROLEPLAY_PRESETS = [
+    { tag: 'Salary talk', partner: 'My manager, busy and careful with budget', scenario: 'I want to ask for a raise after a strong year, but budgets are tight.' },
+    { tag: 'Job interview', partner: 'A hiring manager at the company', scenario: 'A job interview for a role I really want.' },
+    { tag: 'Difficult client', partner: 'An unhappy client who thinks the work is late and not good enough', scenario: 'The client is upset and threatens to cancel the contract.' },
+    { tag: 'Missed deadline', partner: 'My manager, who expected the work today', scenario: 'I need to tell my manager the project will be three days late and propose a plan.' },
+    { tag: 'Freelance client', partner: 'A new client who wants more work for the same price', scenario: 'The client keeps adding tasks that are outside the agreed scope.' },
+    { tag: 'Saying no', partner: 'A colleague who keeps asking me to do their tasks', scenario: 'I want to decline another request without damaging the relationship.' },
+    { tag: 'Giving feedback', partner: 'A team member who keeps missing deadlines', scenario: 'I need to give honest feedback about missed deadlines.' },
+    { tag: 'Price negotiation', partner: 'A potential client who says my price is too high', scenario: 'Negotiating the price of a project without dropping my rate too much.' },
+  ];
+  const INTERVIEW_KINDS = ['Job interview', 'Promotion interview', 'Client call', 'Freelance project call'];
+  const LANG_CODES = { English: 'en-US', Spanish: 'es-ES', French: 'fr-FR', German: 'de-DE', Portuguese: 'pt-BR', Italian: 'it-IT', Russian: 'ru-RU', Ukrainian: 'uk-UA', Polish: 'pl-PL', Dutch: 'nl-NL', Turkish: 'tr-TR', Arabic: 'ar-SA', Hindi: 'hi-IN', Chinese: 'zh-CN', Japanese: 'ja-JP', Korean: 'ko-KR', Vietnamese: 'vi-VN', Thai: 'th-TH', Indonesian: 'id-ID', Swedish: 'sv-SE', Norwegian: 'nb-NO', Danish: 'da-DK', Finnish: 'fi-FI', Greek: 'el-GR', Czech: 'cs-CZ', Romanian: 'ro-RO', Hungarian: 'hu-HU', Hebrew: 'he-IL', Persian: 'fa-IR', Bengali: 'bn-IN', Urdu: 'ur-PK', Filipino: 'fil-PH', Malay: 'ms-MY', Swahili: 'sw-KE', Serbian: 'sr-RS' };
+  const langCode = LANG_CODES[outputLang] || 'en-US';
+
+  const [rpPartner, setRpPartner] = useState(() => localStorage.getItem('swc_rp_partner') || '');
+  const [rpScenario, setRpScenario] = useState(() => localStorage.getItem('swc_rp_scenario') || '');
+  const [rpDifficulty, setRpDifficulty] = useState(() => localStorage.getItem('swc_rp_difficulty') || 'realistic');
+  const [rpMessages, setRpMessages] = useState([]);
+  const [rpInput, setRpInput] = useState('');
+  const [rpLoading, setRpLoading] = useState(false);
+  const [rpError, setRpError] = useState('');
+  const [rpFeedback, setRpFeedback] = useState(null);
+  const RP_MAX_TURNS = 12;
+  const [rpAutoSpeak, setRpAutoSpeak] = useState(() => localStorage.getItem('swc_rp_autospeak') === 'true');
+  useEffect(() => { try { localStorage.setItem('swc_rp_autospeak', String(rpAutoSpeak)); } catch (e) {} }, [rpAutoSpeak]);
+
+  const [ivKind, setIvKind] = useState(() => localStorage.getItem('swc_iv_kind') || 'Job interview');
+  const [ivTarget, setIvTarget] = useState(() => localStorage.getItem('swc_iv_target') || '');
+  const [ivBackground, setIvBackground] = useState(() => localStorage.getItem('swc_iv_background') || '');
+  const [ivQuestions, setIvQuestions] = useState([]);
+  const [ivAnswers, setIvAnswers] = useState([]);
+  const [ivStep, setIvStep] = useState(0);
+  const [ivLoading, setIvLoading] = useState(false);
+  const [ivError, setIvError] = useState('');
+  const [ivReview, setIvReview] = useState(null);
+
+  const [practiceHistory, setPracticeHistory] = useState(() => {
+    try { const h = JSON.parse(localStorage.getItem('swc_practice_history') || '[]'); return Array.isArray(h) ? h : []; } catch (e) { return []; }
+  });
+
+  useEffect(() => { try { localStorage.setItem('swc_rp_partner', rpPartner); localStorage.setItem('swc_rp_scenario', rpScenario); localStorage.setItem('swc_rp_difficulty', rpDifficulty); } catch (e) {} }, [rpPartner, rpScenario, rpDifficulty]);
+  useEffect(() => { try { localStorage.setItem('swc_iv_kind', ivKind); localStorage.setItem('swc_iv_target', ivTarget); localStorage.setItem('swc_iv_background', ivBackground); } catch (e) {} }, [ivKind, ivTarget, ivBackground]);
+
+  function addHistory(entry) {
+    setPracticeHistory(prev => {
+      const next = [{ ...entry, date: new Date().toISOString().slice(0, 10) }, ...prev].slice(0, 20);
+      try { localStorage.setItem('swc_practice_history', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
+  }
+
+  // Один запрос к серверу для ролевой игры и собеседования
+  async function callPractice(payload) {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...payload, outputLang, userRole, licenseCode: localStorage.getItem('swc_licenseCode') || '' }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 403 && data.code === 'invalid_code') {
+      setUnlocked(false);
+      localStorage.removeItem('swc_unlocked');
+      throw new Error('Your access code was not accepted. Please enter it again.');
+    }
+    if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+    setDailyCount(incrementDailyCount());
+    return data;
+  }
+
+  // Голосовой ввод ответа (бесплатно, через браузер)
+  const [dictating, setDictating] = useState(null);
+  const dictationRef = React.useRef(null);
+  function toggleDictation(target, setter, currentText) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) { alertVoice(); return; }
+    if (dictating) { dictationRef.current?.stop(); return; }
+    const base = currentText ? currentText.trim() + ' ' : '';
+    const recognition = new SpeechRecognition();
+    recognition.lang = langCode;
+    recognition.interimResults = true;
+    recognition.continuous = true;
+    recognition.onresult = (event) => {
+      let t = '';
+      for (let i = 0; i < event.results.length; i++) t += event.results[i][0].transcript;
+      setter(base + t);
+    };
+    recognition.onend = () => setDictating(null);
+    recognition.onerror = () => setDictating(null);
+    dictationRef.current = recognition;
+    recognition.start();
+    setDictating(target);
+  }
+  function alertVoice() {
+    setRpError('Voice input works in Chrome and Edge. You can still type your answer.');
+    setIvError('Voice input works in Chrome and Edge. You can still type your answer.');
+  }
+
+  function speakIn(text) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = langCode;
+    u.rate = 0.97;
+    const voice = window.speechSynthesis.getVoices().find(v => v.lang && v.lang.toLowerCase().startsWith(langCode.slice(0, 2)));
+    if (voice) u.voice = voice;
+    window.speechSynthesis.speak(u);
+  }
+
+  async function startRoleplay() {
+    if (!rpScenario.trim()) return;
+    setRpError(''); setRpFeedback(null); setRpMessages([]); setRpLoading(true);
+    try {
+      const data = await callPractice({ mode: 'roleplay', scenario: rpScenario, partner: rpPartner, difficulty: rpDifficulty, messages: [] });
+      setRpMessages([{ role: 'assistant', content: data.reply }]);
+      if (rpAutoSpeak) speakIn(data.reply);
+    } catch (e) { setRpError(e.message); } finally { setRpLoading(false); }
+  }
+
+  async function sendRoleplay() {
+    const text = rpInput.trim();
+    if (!text || rpLoading) return;
+    if (dictating) dictationRef.current?.stop();
+    const next = [...rpMessages, { role: 'user', content: text }];
+    setRpMessages(next); setRpInput(''); setRpError(''); setRpLoading(true);
+    try {
+      const data = await callPractice({ mode: 'roleplay', scenario: rpScenario, partner: rpPartner, difficulty: rpDifficulty, messages: next });
+      setRpMessages([...next, { role: 'assistant', content: data.reply }]);
+      if (rpAutoSpeak) speakIn(data.reply);
+    } catch (e) { setRpError(e.message); } finally { setRpLoading(false); }
+  }
+
+  async function finishRoleplay() {
+    if (rpLoading) return;
+    setRpError(''); setRpLoading(true);
+    try {
+      const data = await callPractice({ mode: 'roleplay-feedback', scenario: rpScenario, partner: rpPartner, messages: rpMessages });
+      setRpFeedback(data);
+      logPractice();
+      addHistory({ type: 'Role-play', title: rpPartner || rpScenario.slice(0, 60), score: data.score });
+    } catch (e) { setRpError(e.message); } finally { setRpLoading(false); }
+  }
+
+  function resetRoleplay() { setRpMessages([]); setRpFeedback(null); setRpInput(''); setRpError(''); }
+
+  async function startInterview() {
+    if (!ivTarget.trim()) return;
+    setIvError(''); setIvReview(null); setIvQuestions([]); setIvAnswers([]); setIvStep(0); setIvLoading(true);
+    try {
+      const data = await callPractice({ mode: 'interview-start', kind: ivKind, target: ivTarget, background: ivBackground });
+      setIvQuestions(data.questions);
+      setIvAnswers(data.questions.map(() => ''));
+    } catch (e) { setIvError(e.message); } finally { setIvLoading(false); }
+  }
+
+  async function finishInterview() {
+    if (ivLoading) return;
+    if (dictating) dictationRef.current?.stop();
+    setIvError(''); setIvLoading(true);
+    try {
+      const data = await callPractice({ mode: 'interview-review', kind: ivKind, target: ivTarget, qa: ivQuestions.map((q, i) => ({ q, a: ivAnswers[i] || '' })) });
+      setIvReview(data);
+      logPractice();
+      addHistory({ type: ivKind, title: ivTarget.slice(0, 60), score: data.overall });
+    } catch (e) { setIvError(e.message); } finally { setIvLoading(false); }
+  }
+
+  function resetInterview() { setIvQuestions([]); setIvAnswers([]); setIvStep(0); setIvReview(null); setIvError(''); }
+
+  const rpUserTurns = rpMessages.filter(m => m.role === 'user').length;
+  const practiceLimitReached = unlocked && dailyCount >= DAILY_LIMIT;
+
+  // ===================== Голосовая практика =====================
+  // «Повтори за мной» — бесплатно, без ИИ, распознавание речи в браузере.
+  // «Говори свободно» — запись речи, темп и слова-паразиты считаются в браузере,
+  // разбор от ИИ — с кодом доступа.
+  const VOICE_TOPICS = [
+    'Introduce yourself in 60 seconds',
+    'Explain a project delay to a client',
+    'Ask your manager for a raise',
+    'Say no to an extra task politely',
+    'Pitch your service in one minute',
+    'Give feedback to a colleague',
+    'Describe your biggest achievement at work',
+    'Open a meeting and set the agenda',
+  ];
+  const FILLERS = ['um', 'uh', 'er', 'erm', 'hmm', 'like', 'you know', 'basically', 'actually', 'literally', 'sort of', 'kind of', 'i mean'];
+  const HEDGES = ['just', 'maybe', 'i think', 'i guess', 'sorry', 'a little bit', 'probably', 'i hope', 'i feel like'];
+
+  const [vpTab, setVpTab] = useState(() => localStorage.getItem('swc_vp_tab') || 'repeat');
+  useEffect(() => { try { localStorage.setItem('swc_vp_tab', vpTab); } catch (e) {} }, [vpTab]);
+
+  // --- Повтори за мной
+  const [vpCategory, setVpCategory] = useState(() => localStorage.getItem('swc_vp_category') || PHRASE_CATEGORIES[0].name);
+  useEffect(() => { try { localStorage.setItem('swc_vp_category', vpCategory); } catch (e) {} }, [vpCategory]);
+  const vpPool = vpCategory === '__saved' ? savedPhrases : ((PHRASE_CATEGORIES.find(c => c.name === vpCategory) || PHRASE_CATEGORIES[0]).phrases);
+  const [vpIndex, setVpIndex] = useState(0);
+  const vpPhrase = vpPool.length ? vpPool[vpIndex % vpPool.length] : '';
+  const [vpHeard, setVpHeard] = useState('');
+  const [vpListening, setVpListening] = useState(false);
+  const [vpResult, setVpResult] = useState(null);
+  const [vpError, setVpError] = useState('');
+  const [vpDone, setVpDone] = useState(() => {
+    try { const r = JSON.parse(localStorage.getItem('swc_vp_done') || 'null'); return r && r.date === new Date().toISOString().slice(0, 10) ? r.count : 0; } catch (e) { return 0; }
+  });
+  const vpRecRef = React.useRef(null);
+
+  function normWords(t) {
+    return String(t).toLowerCase().replace(/[’']/g, '').replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean);
+  }
+  // Какие слова фразы прозвучали (наибольшая общая подпоследовательность)
+  function compareSpeech(target, spoken) {
+    const a = normWords(target), b = normWords(spoken);
+    const dp = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+    for (let i = a.length - 1; i >= 0; i--) for (let j = b.length - 1; j >= 0; j--)
+      dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    const hit = new Array(a.length).fill(false);
+    let i = 0, j = 0;
+    while (i < a.length && j < b.length) {
+      if (a[i] === b[j]) { hit[i] = true; i++; j++; }
+      else if (dp[i + 1][j] >= dp[i][j + 1]) i++; else j++;
+    }
+    const shown = String(target).split(/\s+/).filter(Boolean);
+    const words = shown.map((w, k) => ({ w, ok: hit[k] !== false }));
+    const score = a.length ? Math.round(hit.filter(Boolean).length / a.length * 100) : 0;
+    return { score, words };
+  }
+
+  function speakEnglish(text, rate) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const u = buildUtterance(text);
+    u.rate = rate;
+    window.speechSynthesis.speak(u);
+  }
+
+  function vpRecord() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { setVpError('Voice practice works in Chrome and Edge on a computer or Android phone.'); return; }
+    if (vpListening) { vpRecRef.current?.stop(); return; }
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    setVpError(''); setVpHeard(''); setVpResult(null);
+    const rec = new SR();
+    rec.lang = 'en-US';
+    rec.interimResults = true;
+    rec.continuous = false;
+    let finalText = '';
+    rec.onresult = (e) => {
+      let t = '';
+      for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
+      finalText = t;
+      setVpHeard(t);
+    };
+    rec.onerror = (e) => {
+      setVpError(e && e.error === 'not-allowed' ? 'Please allow microphone access in your browser and try again.' : e && e.error === 'network' ? 'Your browser could not reach its speech service. Voice practice works best in Google Chrome or Microsoft Edge.' : 'I could not hear you clearly. Try again a little closer to the microphone.');
+    };
+    rec.onend = () => {
+      setVpListening(false);
+      if (finalText.trim()) {
+        setVpResult(compareSpeech(vpPhrase, finalText));
+        setVpDone(prev => {
+          const n = prev + 1;
+          try { localStorage.setItem('swc_vp_done', JSON.stringify({ date: new Date().toISOString().slice(0, 10), count: n })); } catch (e) {}
+          return n;
+        });
+        logPractice();
+      }
+    };
+    vpRecRef.current = rec;
+    rec.start();
+    setVpListening(true);
+  }
+
+  function vpNext() {
+    if (vpListening) vpRecRef.current?.stop();
+    setVpHeard(''); setVpResult(null); setVpError('');
+    if (vpPool.length > 1) {
+      let n = vpIndex;
+      while (n % vpPool.length === vpIndex % vpPool.length) n = Math.floor(Math.random() * vpPool.length);
+      setVpIndex(n);
+    }
+  }
+
+  // --- Говори свободно
+  const [fsTopic, setFsTopic] = useState(() => localStorage.getItem('swc_fs_topic') || VOICE_TOPICS[0]);
+  useEffect(() => { try { localStorage.setItem('swc_fs_topic', fsTopic); } catch (e) {} }, [fsTopic]);
+  const [fsRecording, setFsRecording] = useState(false);
+  const [fsTranscript, setFsTranscript] = useState('');
+  const [fsSeconds, setFsSeconds] = useState(0);
+  const [fsStats, setFsStats] = useState(null);
+  const [fsFeedback, setFsFeedback] = useState(null);
+  const [fsLoading, setFsLoading] = useState(false);
+  const [fsError, setFsError] = useState('');
+  const fsRef = React.useRef({ rec: null, on: false, finals: '', interim: '', start: 0, timer: null });
+  const FS_MAX_SECONDS = 120;
+
+  function countPhrases(text, list) {
+    const t = ' ' + normWords(text).join(' ') + ' ';
+    const found = [];
+    let total = 0;
+    for (const f of list) {
+      const n = t.split(' ' + f + ' ').length - 1;
+      if (n > 0) { found.push(n > 1 ? `${f} ×${n}` : f); total += n; }
+    }
+    return { total, found };
+  }
+
+  function fsStop() {
+    const st = fsRef.current;
+    if (!st.on) return;
+    st.on = false;
+    clearInterval(st.timer);
+    try { st.rec && st.rec.stop(); } catch (e) {}
+    setFsRecording(false);
+    const text = (st.finals + ' ' + st.interim).replace(/\s+/g, ' ').trim();
+    const secs = Math.max(1, Math.round((Date.now() - st.start) / 1000));
+    setFsTranscript(text);
+    setFsSeconds(secs);
+    if (!text) { setFsError('I did not catch any speech. Check your microphone and try again.'); return; }
+    const words = normWords(text).length;
+    setFsStats({ words, seconds: secs, wpm: Math.round(words / (secs / 60)), fillers: countPhrases(text, FILLERS), hedges: countPhrases(text, HEDGES) });
+    logPractice();
+  }
+
+  function fsStart() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { setFsError('Voice practice works in Chrome and Edge on a computer or Android phone.'); return; }
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    setFsError(''); setFsTranscript(''); setFsStats(null); setFsFeedback(null); setFsSeconds(0);
+    const st = fsRef.current;
+    st.on = true; st.finals = ''; st.interim = ''; st.start = Date.now();
+    const begin = () => {
+      const rec = new SR();
+      rec.lang = langCode;
+      rec.interimResults = true;
+      rec.continuous = true;
+      rec.onresult = (e) => {
+        let interim = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) st.finals += ' ' + e.results[i][0].transcript;
+          else interim += e.results[i][0].transcript;
+        }
+        st.interim = interim;
+        setFsTranscript((st.finals + ' ' + interim).trim());
+      };
+      rec.onerror = (e) => {
+        if (e && (e.error === 'not-allowed' || e.error === 'network')) {
+          st.on = false; clearInterval(st.timer); setFsRecording(false);
+          setFsError(e.error === 'network' ? 'Your browser could not reach its speech service. Voice practice works best in Google Chrome or Microsoft Edge.' : 'Please allow microphone access in your browser and try again.');
+        }
+      };
+      // Браузер сам останавливает запись после паузы — продолжаем, пока человек не нажал «Стоп»
+      rec.onend = () => { if (st.on) { st.finals += ' ' + st.interim; st.interim = ''; try { begin(); } catch (e) { fsStop(); } } };
+      st.rec = rec;
+      rec.start();
+    };
+    begin();
+    st.timer = setInterval(() => {
+      const secs = Math.round((Date.now() - st.start) / 1000);
+      setFsSeconds(secs);
+      if (secs >= FS_MAX_SECONDS) fsStop();
+    }, 500);
+    setFsRecording(true);
+  }
+
+  async function fsGetFeedback() {
+    if (fsLoading || !fsTranscript) return;
+    setFsError(''); setFsLoading(true);
+    try {
+      const data = await callPractice({ mode: 'voice-feedback', topic: fsTopic, transcript: fsTranscript, seconds: fsSeconds });
+      setFsFeedback(data);
+      addHistory({ type: 'Voice practice', title: fsTopic.slice(0, 60), score: data.score });
+    } catch (e) { setFsError(e.message); } finally { setFsLoading(false); }
+  }
+
+  useEffect(() => () => { const st = fsRef.current; st.on = false; clearInterval(st.timer); try { st.rec && st.rec.stop(); } catch (e) {} }, []);
+  useEffect(() => { if (page !== 'voice') { if (fsRef.current.on) fsStop(); if (vpListening) vpRecRef.current?.stop(); } }, [page]);
+  const fmtTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+
+  // Библиотека: вкладки по группам и категориям
+  const [libraryGroup, setLibraryGroup] = useState('Work');
+  const [libraryCategory, setLibraryCategory] = useState(null);
+
   // Достижения — считаются на лету из уже отслеживаемых данных,
   // никакого нового хранилища не требуется
   const totalGenerations = freeTrialCount + dailyCount;
@@ -552,6 +857,8 @@ export default function App() {
     { label: 'Checklist regular (all items checked)', done: checkedItems.length >= 6 },
     { label: 'Dedicated practicer (10+ rehearsals)', done: practiceCount >= 10 },
     { label: 'Fluent tested', done: !!quizResult },
+    { label: 'First role-play or mock interview', done: practiceHistory.length >= 1 },
+    { label: 'Said 10 phrases out loud today', done: vpDone >= 10 },
   ];
   const unlockedCount = ACHIEVEMENTS.filter(a => a.done).length;
 
@@ -572,6 +879,7 @@ export default function App() {
         .page-fade { animation: pageFadeIn 0.45s cubic-bezier(0.22,1,0.36,1) both; }
         @keyframes cardFadeIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
         .result-card-anim { animation: cardFadeIn 0.3s ease both; }
+        textarea, input, select { font-family: inherit; }
         @keyframes statPop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .stat-pop { animation: statPop 0.5s cubic-bezier(0.22,1,0.36,1) both; }
         @keyframes marqueeScroll { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
@@ -630,7 +938,7 @@ export default function App() {
             </button>
           </div>
         </div>
-        <nav className="desktop-nav" style={{ gap: 10, justifyContent: 'center', padding: '14px 0' }}>
+        <nav className="desktop-nav" style={{ gap: 10, justifyContent: 'center', flexWrap: 'wrap', padding: '14px 16px' }}>
           {PAGES.slice(1).map(p => (
             <button key={p.id} onClick={() => setPage(p.id)} className="premium-btn"
               style={{
@@ -741,10 +1049,10 @@ export default function App() {
                 Start a scenario &rarr;
               </button>
               <div style={{ display: 'flex', justifyContent: 'center', gap: 48, marginTop: 56, flexWrap: 'wrap' }}>
-                <div className="stat-pop" style={{ animationDelay: '0.05s' }}><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>8</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>tools in one</div></div>
+                <div className="stat-pop" style={{ animationDelay: '0.05s' }}><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>11</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>tools in one</div></div>
                 <div className="stat-pop" style={{ animationDelay: '0.12s' }}><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>35</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>languages</div></div>
                 <div className="stat-pop" style={{ animationDelay: '0.19s' }}><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>No</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>sign-up needed</div></div>
-                <div className="stat-pop" style={{ animationDelay: '0.26s' }}><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>52</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>ready phrases</div></div>
+                <div className="stat-pop" style={{ animationDelay: '0.26s' }}><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>1,000+</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>ready phrases</div></div>
                 <div className="stat-pop" style={{ animationDelay: '0.33s' }}><div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 38, color: SKY_DEEP }}>1</div><div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 2 }}>time payment</div></div>
               </div>
 
@@ -986,10 +1294,506 @@ export default function App() {
         </div>
       )}
 
+      {(page === 'roleplay' || page === 'interview') && !unlocked && (
+        <div key={'locked-' + page} className="page-fade" style={{ maxWidth: 640, margin: '0 auto', padding: '60px 24px' }}>
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 26, marginBottom: 8 }}>{page === 'roleplay' ? 'AI role-play' : 'Mock interview'}</h2>
+          <p style={{ fontSize: 14, color: INK_SOFT, marginBottom: 24 }}>
+            {page === 'roleplay'
+              ? 'The AI plays your manager, client or interviewer, reacts to what you say and pushes back. At the end you get a score and stronger versions of your own lines.'
+              : 'Five realistic questions for your job interview, promotion talk or client call. Answer by typing or speaking, then get a score and a better sample answer for each question.'}
+          </p>
+          <div className="premium-card" style={{ borderRadius: 16, border: `1px solid ${LINE}`, padding: 20, marginBottom: 24, background: '#FAFBFC' }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: SKY_DEEP, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>Example</div>
+            {page === 'roleplay' ? (
+              <div style={{ display: 'grid', gap: 10 }}>
+                <div style={{ justifySelf: 'start', maxWidth: '85%', background: SKY_PALE, padding: '10px 14px', borderRadius: '14px 14px 14px 4px', fontSize: 13.5 }}>Budgets are frozen this year. Why should I make an exception for you?</div>
+                <div style={{ justifySelf: 'end', maxWidth: '85%', background: SKY, color: '#FFF', padding: '10px 14px', borderRadius: '14px 14px 4px 14px', fontSize: 13.5 }}>Because I delivered two projects early, and I'd like to talk about what that's worth.</div>
+                <div style={{ justifySelf: 'start', maxWidth: '85%', background: SKY_PALE, padding: '10px 14px', borderRadius: '14px 14px 14px 4px', fontSize: 13.5 }}>That's fair. What number do you have in mind?</div>
+              </div>
+            ) : (
+              <div style={{ fontSize: 13.5, lineHeight: 1.6 }}>
+                <p style={{ margin: '0 0 8px' }}><strong>Q2 of 5.</strong> Tell me about a time a project went wrong. What did you do?</p>
+                <p style={{ margin: 0, color: INK_SOFT }}>Score 7/10. Clear story, but add the result in numbers, for example how many days you saved.</p>
+              </div>
+            )}
+          </div>
+          <div style={{ padding: 24, borderRadius: 14, background: SKY_PALE }}>
+            <p style={{ fontSize: 14, fontWeight: 600, margin: '0 0 16px' }}>Included with your access code</p>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <input type="text" value={licenseCode} onChange={e => setLicenseCode(e.target.value)} placeholder="Enter your access code"
+                style={{ flex: '1 1 200px', padding: '10px 14px', borderRadius: 10, border: `1px solid ${LINE}`, fontSize: 14 }} />
+              <button onClick={handleUnlock} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: SKY, color: '#FFF', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>Unlock</button>
+            </div>
+            {licenseError && <p style={{ color: '#D64545', fontSize: 12.5, marginTop: 8 }}>{licenseError}</p>}
+            <a href="/buy.html" style={{ display: 'block', marginTop: 10, fontSize: 12.5, color: SKY_DEEP }}>No code? Get access</a>
+          </div>
+        </div>
+      )}
+
+      {page === 'roleplay' && unlocked && (
+        <div key="roleplay" className="page-fade" style={{ maxWidth: 680, margin: '0 auto', padding: '60px 24px' }}>
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 26, marginBottom: 8 }}>AI role-play</h2>
+          <p style={{ fontSize: 14, color: INK_SOFT, marginBottom: 8 }}>Practice the conversation before it happens. The AI stays in character and pushes back like a real person.</p>
+          <p style={{ fontSize: 12.5, color: SKY_DEEP, marginBottom: 24 }}>{dailyCount} of {DAILY_LIMIT} AI replies today</p>
+
+          {rpMessages.length === 0 && !rpFeedback && (
+            <>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+                {ROLEPLAY_PRESETS.map(p => (
+                  <button key={p.tag} onClick={() => { setRpPartner(p.partner); setRpScenario(p.scenario); }}
+                    style={{ padding: '7px 13px', borderRadius: 999, border: `1px solid ${rpScenario === p.scenario ? SKY : LINE}`, background: rpScenario === p.scenario ? SKY_PALE : '#FFF', color: rpScenario === p.scenario ? SKY_DEEP : INK, fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>
+                    {p.tag}
+                  </button>
+                ))}
+              </div>
+              <label style={{ display: 'block', fontSize: 12.5, color: INK_SOFT, marginBottom: 6 }}>Who will you talk to?</label>
+              <input value={rpPartner} onChange={e => setRpPartner(e.target.value)} placeholder="e.g. my manager, an unhappy client, a hiring manager"
+                style={{ width: '100%', padding: '12px 16px', borderRadius: 10, border: `1px solid ${LINE}`, fontSize: 14, marginBottom: 16 }} />
+              <label style={{ display: 'block', fontSize: 12.5, color: INK_SOFT, marginBottom: 6 }}>What's the situation, and what do you want to get out of it?</label>
+              <textarea value={rpScenario} onChange={e => setRpScenario(e.target.value)} rows={3}
+                placeholder="I want to ask for a raise after a strong year, but budgets are tight..."
+                style={{ width: '100%', padding: 16, borderRadius: 12, border: `1px solid ${LINE}`, fontSize: 14.5, resize: 'vertical', marginBottom: 16 }} />
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 20 }}>
+                <span style={{ fontSize: 12.5, color: INK_SOFT }}>How tough?</span>
+                {[['friendly', 'Friendly'], ['realistic', 'Realistic'], ['tough', 'Tough']].map(([v, l]) => (
+                  <button key={v} onClick={() => setRpDifficulty(v)}
+                    style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${rpDifficulty === v ? SKY : LINE}`, background: rpDifficulty === v ? SKY : '#FFF', color: rpDifficulty === v ? '#FFF' : INK, fontSize: 12.5, cursor: 'pointer' }}>{l}</button>
+                ))}
+                <label style={{ fontSize: 12.5, color: SKY_DEEP, cursor: 'pointer', marginLeft: 6 }}>
+                  <input type="checkbox" checked={rpAutoSpeak} onChange={e => setRpAutoSpeak(e.target.checked)} style={{ marginRight: 6, verticalAlign: 'middle' }} />Voice mode
+                </label>
+                <select value={outputLang} onChange={e => setOutputLang(e.target.value)}
+                  style={{ marginLeft: 'auto', fontSize: 12.5, padding: '6px 10px', borderRadius: 8, border: `1px solid ${LINE}`, background: '#FFF', color: INK_SOFT }}>
+                  {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
+                </select>
+              </div>
+              {practiceLimitReached ? (
+                <p style={{ fontSize: 13.5, color: INK_SOFT }}>Today's {DAILY_LIMIT} AI replies are used up. Come back tomorrow.</p>
+              ) : (
+                <button onClick={startRoleplay} disabled={rpLoading || !rpScenario.trim()} className="premium-btn"
+                  style={{ padding: '14px 30px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontSize: 14.5, fontWeight: 600, opacity: (rpLoading || !rpScenario.trim()) ? 0.5 : 1 }}>
+                  {rpLoading ? 'Starting...' : 'Start the conversation'}
+                </button>
+              )}
+            </>
+          )}
+
+          {rpMessages.length > 0 && !rpFeedback && (
+            <div>
+              <div style={{ fontSize: 12.5, color: INK_SOFT, marginBottom: 14 }}>
+                Talking to: <strong style={{ color: INK }}>{rpPartner || 'the other person'}</strong> &middot; {rpUserTurns} of {RP_MAX_TURNS} replies
+                <label style={{ float: 'right', cursor: 'pointer', color: SKY_DEEP }}>
+                  <input type="checkbox" checked={rpAutoSpeak} onChange={e => setRpAutoSpeak(e.target.checked)} style={{ marginRight: 6, verticalAlign: 'middle' }} />Read replies aloud
+                </label>
+              </div>
+              <div style={{ display: 'grid', gap: 10, marginBottom: 18 }}>
+                {rpMessages.map((m, i) => (
+                  <div key={i} className="result-card-anim" style={{
+                    justifySelf: m.role === 'user' ? 'end' : 'start', maxWidth: '85%',
+                    background: m.role === 'user' ? SKY : SKY_PALE, color: m.role === 'user' ? '#FFF' : INK,
+                    padding: '11px 15px', borderRadius: m.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px', fontSize: 14.5, lineHeight: 1.5,
+                    display: 'flex', gap: 10, alignItems: 'flex-start',
+                  }}>
+                    <span style={{ whiteSpace: 'pre-wrap' }}>{m.content}</span>
+                    {m.role === 'assistant' && (
+                      <button onClick={() => speakIn(m.content)} aria-label="Listen" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: SKY_DEEP, padding: 0, flexShrink: 0 }}>{'\u{1F50A}'}</button>
+                    )}
+                  </div>
+                ))}
+                {rpLoading && <div className="shimmer-line" style={{ justifySelf: 'start', width: 180, height: 40, borderRadius: 14 }} />}
+              </div>
+              {rpUserTurns < RP_MAX_TURNS && !practiceLimitReached ? (
+                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', marginBottom: 12 }}>
+                  <textarea value={rpInput} onChange={e => setRpInput(e.target.value)} rows={2}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendRoleplay(); } }}
+                    placeholder="Type what you would say, or press the mic and speak"
+                    style={{ flex: 1, padding: 12, borderRadius: 12, border: `1px solid ${LINE}`, fontSize: 14.5, resize: 'vertical' }} />
+                  <button onClick={() => toggleDictation('rp', setRpInput, rpInput)} aria-label="Speak"
+                    style={{ width: 46, height: 46, borderRadius: '50%', border: 'none', cursor: 'pointer', background: dictating === 'rp' ? '#D64545' : SKY_PALE, color: dictating === 'rp' ? '#FFF' : SKY_DEEP, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <FeatureIcon type="mic" color={dictating === 'rp' ? '#FFF' : SKY_DEEP} size={20} />
+                  </button>
+                  <button onClick={sendRoleplay} disabled={rpLoading || !rpInput.trim()}
+                    style={{ height: 46, padding: '0 18px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontWeight: 600, fontSize: 14, opacity: (rpLoading || !rpInput.trim()) ? 0.5 : 1 }}>Send</button>
+                </div>
+              ) : (
+                <p style={{ fontSize: 13, color: INK_SOFT, marginBottom: 12 }}>{practiceLimitReached ? `Today's ${DAILY_LIMIT} AI replies are used up.` : 'That is the end of this round.'} Get your feedback below.</p>
+              )}
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <button onClick={finishRoleplay} disabled={rpLoading || rpUserTurns === 0} className="premium-btn"
+                  style={{ padding: '11px 22px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY_DEEP, color: '#FFF', fontWeight: 600, fontSize: 13.5, opacity: (rpLoading || rpUserTurns === 0) ? 0.5 : 1 }}>
+                  Finish and get feedback
+                </button>
+                <button onClick={resetRoleplay} style={{ padding: '11px 18px', borderRadius: 999, border: `1px solid ${LINE}`, background: '#FFF', cursor: 'pointer', fontSize: 13.5 }}>Start over</button>
+              </div>
+            </div>
+          )}
+
+          {rpFeedback && (
+            <div className="result-card-anim">
+              <div className="premium-card" style={{ background: '#F7FAFC', borderRadius: 16, padding: 28, marginBottom: 16, display: 'flex', gap: 22, alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 52, color: SKY_DEEP, lineHeight: 1 }}>{rpFeedback.score}</div>
+                <div style={{ flex: '1 1 260px' }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: SKY_DEEP, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Your score out of 100</div>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>{rpFeedback.summary}</p>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12, marginBottom: 16 }}>
+                <div style={{ padding: 18, borderRadius: 12, background: SKY_PALE }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: SKY_DEEP, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>What worked</div>
+                  <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13.5, lineHeight: 1.55 }}>{rpFeedback.strengths.map((t, i) => <li key={i}>{t}</li>)}</ul>
+                </div>
+                <div style={{ padding: 18, borderRadius: 12, border: `1px solid ${LINE}` }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: INK_SOFT, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>What to work on</div>
+                  <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13.5, lineHeight: 1.55 }}>{rpFeedback.improve.map((t, i) => <li key={i}>{t}</li>)}</ul>
+                </div>
+              </div>
+              {rpFeedback.betterLines.length > 0 && (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: INK_SOFT, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 10 }}>Say it stronger</div>
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {rpFeedback.betterLines.map((b, i) => (
+                      <div key={i} style={{ padding: '14px 16px', borderRadius: 12, border: `1px solid ${LINE}`, background: '#FAFBFC' }}>
+                        <p style={{ margin: '0 0 6px', fontSize: 13, color: INK_SOFT }}>You said: {b.yours}</p>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                          <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.5 }}>{b.stronger}</p>
+                          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                            <button onClick={() => speakIn(b.stronger)} aria-label="Listen" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: SKY_DEEP }}>{'\u{1F50A}'}</button>
+                            <button onClick={() => toggleSave(b.stronger)} aria-label="Save" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: savedPhrases.includes(b.stronger) ? SKY_DEEP : INK_SOFT }}>{savedPhrases.includes(b.stronger) ? '★' : '☆'}</button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <button onClick={startRoleplay} disabled={rpLoading || practiceLimitReached} className="premium-btn"
+                  style={{ padding: '12px 24px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontWeight: 600, fontSize: 14, opacity: (rpLoading || practiceLimitReached) ? 0.5 : 1 }}>Try again</button>
+                <button onClick={resetRoleplay} style={{ padding: '12px 20px', borderRadius: 999, border: `1px solid ${LINE}`, background: '#FFF', cursor: 'pointer', fontSize: 14 }}>New situation</button>
+              </div>
+            </div>
+          )}
+          {rpError && <p style={{ color: '#D64545', fontSize: 13, marginTop: 12 }}>{rpError}</p>}
+        </div>
+      )}
+
+      {page === 'interview' && unlocked && (
+        <div key="interview" className="page-fade" style={{ maxWidth: 680, margin: '0 auto', padding: '60px 24px' }}>
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 26, marginBottom: 8 }}>Mock interview</h2>
+          <p style={{ fontSize: 14, color: INK_SOFT, marginBottom: 8 }}>Five questions a real interviewer would ask, then an honest review of every answer.</p>
+          <p style={{ fontSize: 12.5, color: SKY_DEEP, marginBottom: 24 }}>{dailyCount} of {DAILY_LIMIT} AI replies today</p>
+
+          {ivQuestions.length === 0 && !ivReview && (
+            <>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+                {INTERVIEW_KINDS.map(k => (
+                  <button key={k} onClick={() => setIvKind(k)}
+                    style={{ padding: '7px 13px', borderRadius: 999, border: `1px solid ${ivKind === k ? SKY : LINE}`, background: ivKind === k ? SKY_PALE : '#FFF', color: ivKind === k ? SKY_DEEP : INK, fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>{k}</button>
+                ))}
+              </div>
+              <label style={{ display: 'block', fontSize: 12.5, color: INK_SOFT, marginBottom: 6 }}>What is the interview for?</label>
+              <input value={ivTarget} onChange={e => setIvTarget(e.target.value)}
+                placeholder={ivKind === 'Job interview' ? 'e.g. junior data analyst at a bank' : ivKind === 'Promotion interview' ? 'e.g. moving from designer to team lead' : ivKind === 'Client call' ? 'e.g. first call with a hotel that wants a new website' : 'e.g. a 3-month marketing project for a US startup'}
+                style={{ width: '100%', padding: '12px 16px', borderRadius: 10, border: `1px solid ${LINE}`, fontSize: 14, marginBottom: 16 }} />
+              <label style={{ display: 'block', fontSize: 12.5, color: INK_SOFT, marginBottom: 6 }}>A few words about you (optional, makes the questions sharper)</label>
+              <textarea value={ivBackground} onChange={e => setIvBackground(e.target.value)} rows={3}
+                placeholder="e.g. 4 years in customer support, led a team of 3, learning data analysis..."
+                style={{ width: '100%', padding: 16, borderRadius: 12, border: `1px solid ${LINE}`, fontSize: 14.5, resize: 'vertical', marginBottom: 16 }} />
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 20 }}>
+                <select value={outputLang} onChange={e => setOutputLang(e.target.value)}
+                  style={{ fontSize: 12.5, padding: '6px 10px', borderRadius: 8, border: `1px solid ${LINE}`, background: '#FFF', color: INK_SOFT }}>
+                  {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
+                </select>
+              </div>
+              {practiceLimitReached ? (
+                <p style={{ fontSize: 13.5, color: INK_SOFT }}>Today's {DAILY_LIMIT} AI replies are used up. Come back tomorrow.</p>
+              ) : (
+                <button onClick={startInterview} disabled={ivLoading || !ivTarget.trim()} className="premium-btn"
+                  style={{ padding: '14px 30px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontSize: 14.5, fontWeight: 600, opacity: (ivLoading || !ivTarget.trim()) ? 0.5 : 1 }}>
+                  {ivLoading ? 'Preparing questions...' : 'Start the interview'}
+                </button>
+              )}
+            </>
+          )}
+
+          {ivQuestions.length > 0 && !ivReview && (
+            <div>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 18 }}>
+                {ivQuestions.map((_, i) => (
+                  <button key={i} onClick={() => setIvStep(i)} aria-label={'Question ' + (i + 1)}
+                    style={{ flex: 1, height: 6, borderRadius: 3, border: 'none', cursor: 'pointer', background: i === ivStep ? SKY : (ivAnswers[i] || '').trim() ? '#A9CFEE' : LINE }} />
+                ))}
+              </div>
+              <div key={ivStep} className="premium-card result-card-anim" style={{ background: '#F7FAFC', borderRadius: 16, padding: 26, marginBottom: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <div style={{ fontSize: 12, color: SKY_DEEP, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Question {ivStep + 1} of {ivQuestions.length}</div>
+                  <button onClick={() => speakIn(ivQuestions[ivStep])} aria-label="Listen" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: SKY_DEEP }}>{'\u{1F50A}'}</button>
+                </div>
+                <p style={{ fontSize: 17, lineHeight: 1.55, margin: 0 }}>{ivQuestions[ivStep]}</p>
+              </div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 14 }}>
+                <textarea value={ivAnswers[ivStep] || ''} rows={5}
+                  onChange={e => { const v = e.target.value; setIvAnswers(prev => prev.map((a, i) => i === ivStep ? v : a)); }}
+                  placeholder="Type your answer, or press the mic and answer out loud"
+                  style={{ flex: 1, padding: 14, borderRadius: 12, border: `1px solid ${LINE}`, fontSize: 14.5, resize: 'vertical' }} />
+                <button onClick={() => toggleDictation('iv', v => setIvAnswers(prev => prev.map((a, i) => i === ivStep ? v : a)), ivAnswers[ivStep] || '')} aria-label="Speak"
+                  style={{ width: 46, height: 46, borderRadius: '50%', border: 'none', cursor: 'pointer', background: dictating === 'iv' ? '#D64545' : SKY_PALE, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <FeatureIcon type="mic" color={dictating === 'iv' ? '#FFF' : SKY_DEEP} size={20} />
+                </button>
+              </div>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                {ivStep > 0 && <button onClick={() => setIvStep(ivStep - 1)} style={{ padding: '11px 18px', borderRadius: 999, border: `1px solid ${LINE}`, background: '#FFF', cursor: 'pointer', fontSize: 13.5 }}>Back</button>}
+                {ivStep < ivQuestions.length - 1 ? (
+                  <button onClick={() => { if (dictating) dictationRef.current?.stop(); setIvStep(ivStep + 1); }} className="premium-btn"
+                    style={{ padding: '11px 22px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontWeight: 600, fontSize: 13.5 }}>Next question</button>
+                ) : (
+                  <button onClick={finishInterview} disabled={ivLoading || ivAnswers.every(a => !a.trim())} className="premium-btn"
+                    style={{ padding: '11px 22px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY_DEEP, color: '#FFF', fontWeight: 600, fontSize: 13.5, opacity: (ivLoading || ivAnswers.every(a => !a.trim())) ? 0.5 : 1 }}>
+                    {ivLoading ? 'Reviewing your answers...' : 'Finish and get my review'}
+                  </button>
+                )}
+                <button onClick={resetInterview} style={{ padding: '11px 18px', borderRadius: 999, border: `1px solid ${LINE}`, background: '#FFF', cursor: 'pointer', fontSize: 13.5 }}>Start over</button>
+              </div>
+            </div>
+          )}
+
+          {ivReview && (
+            <div className="result-card-anim">
+              <div className="premium-card" style={{ background: '#F7FAFC', borderRadius: 16, padding: 28, marginBottom: 18, display: 'flex', gap: 22, alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 52, color: SKY_DEEP, lineHeight: 1 }}>{ivReview.overall}</div>
+                <div style={{ flex: '1 1 260px' }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: SKY_DEEP, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Overall, out of 100</div>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>{ivReview.summary}</p>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gap: 12, marginBottom: 20 }}>
+                {ivReview.items.map((it, i) => (
+                  <div key={i} style={{ padding: 18, borderRadius: 12, border: `1px solid ${LINE}`, background: '#FAFBFC' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+                      <p style={{ margin: 0, fontSize: 13.5, fontWeight: 600 }}>{i + 1}. {ivQuestions[i]}</p>
+                      <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 700, color: it.score >= 7 ? '#2E8B57' : it.score >= 4 ? SKY_DEEP : '#D64545', background: '#FFF', border: `1px solid ${LINE}`, borderRadius: 999, padding: '3px 10px', height: 'fit-content' }}>{it.score}/10</span>
+                    </div>
+                    <p style={{ margin: '0 0 10px', fontSize: 13.5, color: INK_SOFT, lineHeight: 1.55 }}>{it.feedback}</p>
+                    {it.better && (
+                      <div style={{ padding: '12px 14px', borderRadius: 10, background: SKY_PALE, display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+                        <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.55 }}><strong>Stronger answer:</strong> {it.better}</p>
+                        <button onClick={() => speakIn(it.better)} aria-label="Listen" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, color: SKY_DEEP, flexShrink: 0 }}>{'\u{1F50A}'}</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <button onClick={startInterview} disabled={ivLoading || practiceLimitReached} className="premium-btn"
+                  style={{ padding: '12px 24px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontWeight: 600, fontSize: 14, opacity: (ivLoading || practiceLimitReached) ? 0.5 : 1 }}>New questions, same interview</button>
+                <button onClick={resetInterview} style={{ padding: '12px 20px', borderRadius: 999, border: `1px solid ${LINE}`, background: '#FFF', cursor: 'pointer', fontSize: 14 }}>Different interview</button>
+              </div>
+            </div>
+          )}
+          {ivError && <p style={{ color: '#D64545', fontSize: 13, marginTop: 12 }}>{ivError}</p>}
+
+          {practiceHistory.length > 0 && (
+            <div style={{ marginTop: 48 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: INK_SOFT, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 10 }}>Your recent practice</div>
+              <div style={{ display: 'grid', gap: 8 }}>
+                {practiceHistory.slice(0, 6).map((h, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13, padding: '10px 14px', borderRadius: 10, border: `1px solid ${LINE}` }}>
+                    <span style={{ color: INK_SOFT }}>{h.date} &middot; {h.type} &middot; <span style={{ color: INK }}>{h.title}</span></span>
+                    <strong style={{ color: SKY_DEEP }}>{h.score}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {page === 'voice' && (
+        <div key="voice" className="page-fade" style={{ maxWidth: 680, margin: '0 auto', padding: '60px 24px' }}>
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 26, marginBottom: 8 }}>Voice practice</h2>
+          <p style={{ fontSize: 14, color: INK_SOFT, marginBottom: 24 }}>Confidence lives in your voice, not on paper. Say it out loud until it feels natural.</p>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 28, flexWrap: 'wrap' }}>
+            {[['repeat', 'Repeat after me'], ['free', 'Speak freely']].map(([id, label]) => (
+              <button key={id} onClick={() => setVpTab(id)}
+                style={{ padding: '9px 18px', borderRadius: 999, border: `1.5px solid ${vpTab === id ? SKY : LINE}`, background: vpTab === id ? SKY : '#FFF', color: vpTab === id ? '#FFF' : INK, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>{label}</button>
+            ))}
+          </div>
+
+          {vpTab === 'repeat' && (
+            <div>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginBottom: 18 }}>
+                <select value={vpCategory} onChange={e => { setVpCategory(e.target.value); setVpIndex(0); setVpHeard(''); setVpResult(null); }}
+                  style={{ flex: '1 1 240px', fontSize: 13.5, padding: '10px 12px', borderRadius: 10, border: `1px solid ${LINE}`, background: '#FFF', color: INK }}>
+                  {savedPhrases.length > 0 && <option value="__saved">My phrasebook ({savedPhrases.length})</option>}
+                  {PHRASE_GROUPS.map(g => (
+                    <optgroup key={g} label={g}>
+                      {PHRASE_CATEGORIES.filter(c => c.group === g).map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                    </optgroup>
+                  ))}
+                </select>
+                <span style={{ fontSize: 12.5, color: SKY_DEEP }}>{vpDone} said out loud today</span>
+              </div>
+              {vpPhrase ? (
+                <div key={vpPhrase} className="premium-card result-card-anim" style={{ background: '#F7FAFC', borderRadius: 16, padding: 28, marginBottom: 18 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: SKY_DEEP, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>Listen, then say it</div>
+                  <p style={{ fontSize: 20, lineHeight: 1.5, margin: '0 0 20px', fontFamily: "'Fraunces', serif" }}>
+                    {vpResult ? vpResult.words.map((x, i) => (
+                      <span key={i} style={{ color: x.ok ? '#2E8B57' : '#D64545', textDecoration: x.ok ? 'none' : 'underline' }}>{x.w} </span>
+                    )) : vpPhrase}
+                  </p>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <button onClick={() => speakEnglish(vpPhrase, 0.95)} style={{ padding: '10px 16px', borderRadius: 999, border: `1px solid ${LINE}`, background: '#FFF', cursor: 'pointer', fontSize: 13.5 }}>{'\u{1F50A}'} Listen</button>
+                    <button onClick={() => speakEnglish(vpPhrase, 0.7)} style={{ padding: '10px 16px', borderRadius: 999, border: `1px solid ${LINE}`, background: '#FFF', cursor: 'pointer', fontSize: 13.5 }}>{'\u{1F422}'} Slowly</button>
+                    <button onClick={vpRecord} className="premium-btn"
+                      style={{ padding: '10px 20px', borderRadius: 999, border: 'none', cursor: 'pointer', background: vpListening ? '#D64545' : SKY, color: '#FFF', fontWeight: 600, fontSize: 13.5, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <FeatureIcon type="mic" color="#FFF" size={17} /> {vpListening ? 'Listening... tap to stop' : vpResult ? 'Say it again' : 'Say it'}
+                    </button>
+                  </div>
+                  {vpHeard && !vpResult && <p style={{ fontSize: 13.5, color: INK_SOFT, margin: '14px 0 0' }}>{vpHeard}</p>}
+                </div>
+              ) : (
+                <p style={{ fontSize: 13.5, color: INK_SOFT }}>No phrases here yet.</p>
+              )}
+              {vpResult && (
+                <div className="result-card-anim" style={{ display: 'flex', gap: 18, alignItems: 'center', padding: '16px 20px', borderRadius: 12, background: SKY_PALE, marginBottom: 18, flexWrap: 'wrap' }}>
+                  <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 34, color: SKY_DEEP }}>{vpResult.score}%</div>
+                  <div style={{ flex: '1 1 220px', fontSize: 13.5, lineHeight: 1.5 }}>
+                    {vpResult.score >= 90 ? 'Clear and natural. Every word came through.' : vpResult.score >= 70 ? 'Good. The underlined words were not clear. Listen once more and repeat them slowly.' : 'Some words got lost. Try the slow version first, then say it at your own pace.'}
+                    <div style={{ color: INK_SOFT, fontSize: 12.5, marginTop: 4 }}>Heard: {vpHeard}</div>
+                  </div>
+                </div>
+              )}
+              {vpError && <p style={{ color: '#D64545', fontSize: 13, marginBottom: 12 }}>{vpError}</p>}
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <button onClick={vpNext} style={{ padding: '11px 20px', borderRadius: 999, border: `1px solid ${LINE}`, background: '#FFF', cursor: 'pointer', fontSize: 13.5, fontWeight: 600 }}>Next phrase</button>
+                {vpPhrase && (
+                  <button onClick={() => toggleSave(vpPhrase)} style={{ padding: '11px 18px', borderRadius: 999, border: `1px solid ${LINE}`, background: '#FFF', cursor: 'pointer', fontSize: 13.5, color: savedPhrases.includes(vpPhrase) ? SKY_DEEP : INK }}>
+                    {savedPhrases.includes(vpPhrase) ? '★ Saved' : '☆ Save to phrasebook'}
+                  </button>
+                )}
+              </div>
+              <p style={{ fontSize: 12, color: INK_SOFT, marginTop: 20 }}>Free and private: your voice is recognized by your browser and never stored.</p>
+            </div>
+          )}
+
+          {vpTab === 'free' && (
+            <div>
+              <label style={{ display: 'block', fontSize: 12.5, color: INK_SOFT, marginBottom: 8 }}>What will you talk about?</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                {VOICE_TOPICS.map(t => (
+                  <button key={t} onClick={() => setFsTopic(t)} disabled={fsRecording}
+                    style={{ padding: '7px 13px', borderRadius: 999, border: `1px solid ${fsTopic === t ? SKY : LINE}`, background: fsTopic === t ? SKY_PALE : '#FFF', color: fsTopic === t ? SKY_DEEP : INK, fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>{t}</button>
+                ))}
+              </div>
+              <input value={fsTopic} onChange={e => setFsTopic(e.target.value)} disabled={fsRecording} placeholder="Or write your own task"
+                style={{ width: '100%', padding: '12px 16px', borderRadius: 10, border: `1px solid ${LINE}`, fontSize: 14, marginBottom: 12 }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 22, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 12.5, color: INK_SOFT }}>Speak in the language you chose. Up to {FS_MAX_SECONDS / 60} minutes.</span>
+                <select value={outputLang} onChange={e => setOutputLang(e.target.value)} disabled={fsRecording}
+                  style={{ fontSize: 12.5, padding: '6px 10px', borderRadius: 8, border: `1px solid ${LINE}`, background: '#FFF', color: INK_SOFT }}>
+                  {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
+                </select>
+              </div>
+
+              <div className="premium-card" style={{ background: '#F7FAFC', borderRadius: 16, padding: 28, marginBottom: 18, textAlign: 'center' }}>
+                <button onClick={fsRecording ? fsStop : fsStart} aria-label={fsRecording ? 'Stop' : 'Start speaking'}
+                  style={{ width: 84, height: 84, borderRadius: '50%', border: 'none', cursor: 'pointer', background: fsRecording ? '#D64545' : SKY, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxShadow: fsRecording ? '0 0 0 10px rgba(214,69,69,0.15)' : '0 8px 24px rgba(74,144,217,0.35)', transition: 'all 0.2s ease' }}>
+                  {fsRecording ? <span style={{ width: 24, height: 24, borderRadius: 4, background: '#FFF' }} /> : <FeatureIcon type="mic" color="#FFF" size={34} />}
+                </button>
+                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 600, color: fsRecording ? '#D64545' : INK, marginTop: 14 }}>{fmtTime(fsSeconds)}</div>
+                <div style={{ fontSize: 12.5, color: INK_SOFT, marginTop: 4 }}>{fsRecording ? 'Recording. Tap the button when you finish.' : fsStats ? 'Done. See how it went below.' : 'Tap and start talking'}</div>
+                {fsTranscript && (
+                  <p style={{ textAlign: 'left', fontSize: 14, lineHeight: 1.6, margin: '20px 0 0', padding: 14, borderRadius: 10, background: '#FFF', border: `1px solid ${LINE}`, color: INK }}>{fsTranscript}</p>
+                )}
+              </div>
+
+              {fsStats && !fsRecording && (
+                <div className="result-card-anim">
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginBottom: 14 }}>
+                    {[
+                      ['Time', fmtTime(fsStats.seconds)],
+                      ['Pace', fsStats.seconds >= 10 ? `${fsStats.wpm} wpm` : '—'],
+                      ['Filler words', String(fsStats.fillers.total)],
+                      ['Hedging words', String(fsStats.hedges.total)],
+                    ].map(([l, v]) => (
+                      <div key={l} style={{ padding: '14px 16px', borderRadius: 12, border: `1px solid ${LINE}`, background: '#FFF' }}>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: INK_SOFT, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{l}</div>
+                        <div style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 600, color: SKY_DEEP, marginTop: 4 }}>{v}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <ul style={{ margin: '0 0 18px', paddingLeft: 18, fontSize: 13.5, lineHeight: 1.6, color: INK }}>
+                    {fsStats.seconds >= 10 && <li>{fsStats.wpm < 110 ? 'A bit slow. Try to keep moving between sentences.' : fsStats.wpm > 170 ? 'Quite fast. Slow down and pause after your key point.' : 'Comfortable pace. Easy to follow.'}</li>}
+                    {fsStats.fillers.total > 0 && <li>Fillers: {fsStats.fillers.found.join(', ')}. Replace them with a short pause.</li>}
+                    {fsStats.hedges.total > 0 && <li>Softeners: {fsStats.hedges.found.join(', ')}. Drop them where you want to sound sure.</li>}
+                  </ul>
+
+                  {!fsFeedback && (unlocked ? (
+                    <button onClick={fsGetFeedback} disabled={fsLoading || practiceLimitReached} className="premium-btn"
+                      style={{ padding: '13px 26px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY_DEEP, color: '#FFF', fontWeight: 600, fontSize: 14, opacity: (fsLoading || practiceLimitReached) ? 0.5 : 1 }}>
+                      {fsLoading ? 'Listening to your answer...' : practiceLimitReached ? `Today's ${DAILY_LIMIT} AI replies are used up` : 'Get AI feedback'}
+                    </button>
+                  ) : (
+                    <div style={{ padding: 22, borderRadius: 14, background: SKY_PALE }}>
+                      <p style={{ fontSize: 14, fontWeight: 600, margin: '0 0 6px' }}>Want a score and a stronger version from the AI?</p>
+                      <p style={{ fontSize: 13, color: INK_SOFT, margin: '0 0 14px' }}>Included with your access code.</p>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        <input type="text" value={licenseCode} onChange={e => setLicenseCode(e.target.value)} placeholder="Enter your access code"
+                          style={{ flex: '1 1 200px', padding: '10px 14px', borderRadius: 10, border: `1px solid ${LINE}`, fontSize: 14 }} />
+                        <button onClick={handleUnlock} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: SKY, color: '#FFF', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>Unlock</button>
+                      </div>
+                      {licenseError && <p style={{ color: '#D64545', fontSize: 12.5, marginTop: 8 }}>{licenseError}</p>}
+                      <a href="/buy.html" style={{ display: 'block', marginTop: 10, fontSize: 12.5, color: SKY_DEEP }}>No code? Get access</a>
+                    </div>
+                  ))}
+
+                  {fsFeedback && (
+                    <div className="result-card-anim">
+                      <div className="premium-card" style={{ background: '#F7FAFC', borderRadius: 16, padding: 26, marginBottom: 14, display: 'flex', gap: 22, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 52, color: SKY_DEEP, lineHeight: 1 }}>{fsFeedback.score}</div>
+                        <div style={{ flex: '1 1 260px' }}>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: SKY_DEEP, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>How it sounded, out of 100</div>
+                          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>{fsFeedback.summary}</p>
+                        </div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12, marginBottom: 14 }}>
+                        <div style={{ padding: 18, borderRadius: 12, background: SKY_PALE }}>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: SKY_DEEP, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>What worked</div>
+                          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13.5, lineHeight: 1.55 }}>{fsFeedback.strengths.map((t, i) => <li key={i}>{t}</li>)}</ul>
+                        </div>
+                        <div style={{ padding: 18, borderRadius: 12, border: `1px solid ${LINE}` }}>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: INK_SOFT, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>Next time</div>
+                          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13.5, lineHeight: 1.55 }}>{fsFeedback.improve.map((t, i) => <li key={i}>{t}</li>)}</ul>
+                        </div>
+                      </div>
+                      {fsFeedback.stronger && (
+                        <div style={{ padding: '16px 18px', borderRadius: 12, border: `1px solid ${LINE}`, background: '#FAFBFC', marginBottom: 18 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: INK_SOFT, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Say it like this</div>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                              <button onClick={() => speakIn(fsFeedback.stronger)} aria-label="Listen" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: SKY_DEEP }}>{'\u{1F50A}'}</button>
+                              <button onClick={() => toggleSave(fsFeedback.stronger)} aria-label="Save" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: savedPhrases.includes(fsFeedback.stronger) ? SKY_DEEP : INK_SOFT }}>{savedPhrases.includes(fsFeedback.stronger) ? '★' : '☆'}</button>
+                            </div>
+                          </div>
+                          <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6 }}>{fsFeedback.stronger}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <button onClick={fsStart} className="premium-btn"
+                    style={{ marginTop: 14, padding: '12px 24px', borderRadius: 999, border: `1px solid ${LINE}`, cursor: 'pointer', background: '#FFF', color: INK, fontWeight: 600, fontSize: 13.5 }}>Record again</button>
+                </div>
+              )}
+              {fsError && <p style={{ color: '#D64545', fontSize: 13, marginTop: 12 }}>{fsError}</p>}
+            </div>
+          )}
+        </div>
+      )}
+
       {page === 'library' && (
         <div key="library" className="page-fade" style={{ maxWidth: 900, margin: '0 auto', padding: '60px 24px' }}>
           <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 26, marginBottom: 8 }}>Phrase library</h2>
-          <p style={{ fontSize: 14, color: INK_SOFT, marginBottom: 24 }}>Ready lines by situation — no waiting, no generation.</p>
+          <p style={{ fontSize: 14, color: INK_SOFT, marginBottom: 24 }}>1,000+ ready lines for work and everyday life. Tap to listen, star to save.</p>
           {userRole.trim() && (
             <p style={{ fontSize: 12.5, color: SKY_DEEP, marginTop: -14, marginBottom: 24 }}>
               Sorted for: <strong>{userRole}</strong> &middot; <button onClick={() => setPage('scenario')} style={{ background: 'none', border: 'none', color: SKY_DEEP, textDecoration: 'underline', cursor: 'pointer', fontSize: 12.5, padding: 0 }}>change</button>
@@ -998,57 +1802,75 @@ export default function App() {
           <input
             value={librarySearch}
             onChange={e => setLibrarySearch(e.target.value)}
-            placeholder="Search phrases or categories..."
-            style={{ width: '100%', padding: 14, borderRadius: 10, border: `1px solid ${LINE}`, fontSize: 14, marginBottom: 32 }}
+            placeholder="Search 1,000+ phrases, e.g. deadline, invoice, refund..."
+            style={{ width: '100%', padding: 14, borderRadius: 10, border: `1px solid ${LINE}`, fontSize: 14, marginBottom: 20 }}
           />
-          {sortCategoriesByRole(PHRASE_CATEGORIES, userRole)
-            .map(cat => ({
-              ...cat,
-              phrases: cat.phrases.filter(p =>
-                !librarySearch.trim() ||
-                p.toLowerCase().includes(librarySearch.toLowerCase()) ||
-                cat.name.toLowerCase().includes(librarySearch.toLowerCase())
-              ),
-            }))
-            .filter(cat => cat.phrases.length > 0)
-            .map((cat, ci) => (
-              <div key={ci} style={{ marginBottom: 36 }}>
-                <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 14, color: SKY_DEEP, display: 'flex', alignItems: 'center', gap: 10 }}>
-                  {cat.name}
-                  {cat._score > 0 && (
-                    <span style={{ fontSize: 10, fontWeight: 600, color: SKY_DEEP, background: SKY_PALE, padding: '3px 9px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                      Recommended for you
-                    </span>
-                  )}
-                </h3>
-                <div style={{ display: 'grid', gap: 10 }}>
-                  {cat.phrases.map((p, pi) => (
-                    <div key={pi} style={{
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 14,
-                      padding: '14px 16px', borderRadius: 10, border: `1px solid ${LINE}`, background: '#FAFBFC',
-                    }}>
-                      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>{p}</p>
-                      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                        <button
-                          onClick={() => toggleSpeak(p)}
-                          aria-label={speakingText === p ? 'Stop' : 'Listen'}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: SKY_DEEP }}
-                        >
-                          {speakingText === p ? '\u23F9' : '\u{1F50A}'}
-                        </button>
-                        <button
-                          onClick={() => toggleSave(p)}
-                          aria-label="Save"
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: savedPhrases.includes(p) ? SKY_DEEP : INK_SOFT }}
-                        >
-                          {savedPhrases.includes(p) ? '\u2605' : '\u2606'}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+          {(() => {
+            const q = librarySearch.trim().toLowerCase();
+            const renderPhrase = (p, key) => (
+              <div key={key} style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 14,
+                padding: '14px 16px', borderRadius: 10, border: `1px solid ${LINE}`, background: '#FAFBFC',
+              }}>
+                <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>{p}</p>
+                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                  <button onClick={() => toggleSpeak(p)} aria-label={speakingText === p ? 'Stop' : 'Listen'}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: SKY_DEEP }}>
+                    {speakingText === p ? '\u23F9' : '\u{1F50A}'}
+                  </button>
+                  <button onClick={() => toggleSave(p)} aria-label="Save"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: savedPhrases.includes(p) ? SKY_DEEP : INK_SOFT }}>
+                    {savedPhrases.includes(p) ? '\u2605' : '\u2606'}
+                  </button>
                 </div>
               </div>
-          ))}
+            );
+            if (q) {
+              const hits = [];
+              PHRASE_CATEGORIES.forEach(cat => cat.phrases.forEach(p => {
+                if (p.toLowerCase().includes(q) || cat.name.toLowerCase().includes(q)) hits.push({ p, cat: cat.name });
+              }));
+              return (
+                <div>
+                  <p style={{ fontSize: 12.5, color: INK_SOFT, margin: '0 0 14px' }}>{hits.length} {hits.length === 1 ? 'phrase' : 'phrases'} found{hits.length > 80 ? ', showing the first 80' : ''}</p>
+                  <div style={{ display: 'grid', gap: 10 }}>{hits.slice(0, 80).map((h, i) => renderPhrase(h.p, i))}</div>
+                </div>
+              );
+            }
+            const groupCats = sortCategoriesByRole(PHRASE_CATEGORIES.filter(c => c.group === libraryGroup), userRole);
+            const active = groupCats.find(c => c.name === libraryCategory) || groupCats[0];
+            return (
+              <div>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                  {PHRASE_GROUPS.map(g => (
+                    <button key={g} onClick={() => { setLibraryGroup(g); setLibraryCategory(null); }}
+                      style={{ padding: '8px 16px', borderRadius: 999, border: `1.5px solid ${libraryGroup === g ? SKY : LINE}`, background: libraryGroup === g ? SKY : '#FFF', color: libraryGroup === g ? '#FFF' : INK, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
+                      {g}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+                  {groupCats.map(c => (
+                    <button key={c.name} onClick={() => setLibraryCategory(c.name)}
+                      style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${active && active.name === c.name ? SKY : LINE}`, background: active && active.name === c.name ? SKY_PALE : '#FFF', color: active && active.name === c.name ? SKY_DEEP : INK_SOFT, fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>
+                      {c.name} <span style={{ opacity: 0.6, fontWeight: 500 }}>{c.phrases.length}</span>
+                    </button>
+                  ))}
+                </div>
+                {active && (
+                  <div>
+                    <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 14, color: SKY_DEEP, display: 'flex', alignItems: 'center', gap: 10 }}>
+                      {active.name}
+                      {active._score > 0 && (
+                        <span style={{ fontSize: 10, fontWeight: 600, color: SKY_DEEP, background: SKY_PALE, padding: '3px 9px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Recommended for you</span>
+                      )}
+                    </h3>
+                    <div style={{ display: 'grid', gap: 10 }}>{active.phrases.map((p, i) => renderPhrase(p, i))}</div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
       )}
       {page === 'checklist' && (
