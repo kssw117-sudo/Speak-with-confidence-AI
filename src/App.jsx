@@ -880,6 +880,8 @@ export default function App() {
         @keyframes cardFadeIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
         .result-card-anim { animation: cardFadeIn 0.3s ease both; }
         textarea, input, select { font-family: inherit; }
+        .ready-img { transition: transform 0.6s ease; }
+        .ready-banner:hover .ready-img { transform: scale(1.04); }
         @keyframes statPop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .stat-pop { animation: statPop 0.5s cubic-bezier(0.22,1,0.36,1) both; }
         @keyframes marqueeScroll { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
@@ -1157,6 +1159,37 @@ export default function App() {
                     <p style={{ fontSize: 14.5, lineHeight: 1.55, margin: 0, fontStyle: 'italic' }}>&ldquo;{s.line}&rdquo;</p>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ---------- READY BANNER ---------- */}
+          <div style={{ maxWidth: 1000, margin: '0 auto', padding: '72px 24px 8px' }}>
+            <div className="premium-card ready-banner" onClick={() => setPage('interview')} role="button" tabIndex={0}
+              onKeyDown={e => { if (e.key === 'Enter') setPage('interview'); }}
+              style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', borderRadius: 20, overflow: 'hidden', background: '#FFF', cursor: 'pointer' }}>
+              <div style={{ minHeight: 300, overflow: 'hidden' }}>
+                <img src="/images/ready.jpg" alt="Calm and ready before the interview" className="ready-img"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '40% 30%', display: 'block' }} />
+              </div>
+              <div style={{ padding: '40px 36px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: SKY_DEEP, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>Interview tomorrow?</div>
+                <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 32, lineHeight: 1.2, margin: '0 0 14px' }}>
+                  Walk in like you've already done it once
+                </h2>
+                <p style={{ fontSize: 14.5, color: INK_SOFT, lineHeight: 1.6, margin: '0 0 26px' }}>
+                  Answer five real questions out loud tonight. Get a score, honest feedback and a stronger version of every answer, so tomorrow feels like a second take.
+                </p>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  <button onClick={e => { e.stopPropagation(); setPage('interview'); }} className="premium-btn"
+                    style={{ padding: '13px 24px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontSize: 14, fontWeight: 600 }}>
+                    Start a mock interview &rarr;
+                  </button>
+                  <button onClick={e => { e.stopPropagation(); setPage('voice'); }}
+                    style={{ padding: '13px 20px', borderRadius: 999, border: `1px solid ${LINE}`, cursor: 'pointer', background: '#FFF', color: INK, fontSize: 14, fontWeight: 600 }}>
+                    Practice out loud
+                  </button>
+                </div>
               </div>
             </div>
           </div>
