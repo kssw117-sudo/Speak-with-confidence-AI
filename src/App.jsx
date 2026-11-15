@@ -1343,6 +1343,22 @@ export default function App() {
             </div>
           </div>
 
+          {/* ---------- COVER BANNER (та же картинка, что в превью ссылки) ---------- */}
+          <div style={{ maxWidth: 1000, margin: '0 auto', padding: '56px 24px 8px' }}>
+            <div className="premium-card ready-banner" onClick={() => setPage('roleplay')} role="button" tabIndex={0}
+              onKeyDown={e => { if (e.key === 'Enter') setPage('roleplay'); }}
+              style={{ borderRadius: 20, overflow: 'hidden', cursor: 'pointer', background: '#FFF' }}>
+              <img src="/images/og-cover.jpg" alt="Rehearse the hard conversation before it happens" className="ready-img"
+                style={{ width: '100%', height: 'auto', display: 'block' }} />
+            </div>
+            <div style={{ textAlign: 'center', marginTop: 18 }}>
+              <button onClick={() => setPage('roleplay')} className="premium-btn"
+                style={{ padding: '13px 26px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontSize: 14, fontWeight: 600 }}>
+                Try a free role-play &rarr;
+              </button>
+            </div>
+          </div>
+
           {/* ---------- FEATURES GRID ---------- */}
           <div style={{ maxWidth: 1000, margin: '0 auto', padding: '64px 24px' }}>
             <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 34, textAlign: 'center', marginBottom: 10 }}>
