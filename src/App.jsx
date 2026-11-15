@@ -1097,11 +1097,11 @@ export default function App() {
             <div className="marquee-track" style={{ gap: 28 }}>
               {[...Array(2)].flatMap((_, dup) =>
                 [
-                  { n: 1, caption: 'Steady on both sides of the table' },
-                  { n: 2, caption: 'Calm before the door opens' },
-                  { n: 3, caption: 'Your voice, already prepared' },
-                  { n: 4, caption: 'Where the words actually happen' },
-                  { n: 5, caption: 'First words, already right' },
+                  { n: 5, caption: 'Steady on both sides of the table' },
+                  { n: 1, caption: 'Calm before the door opens' },
+                  { n: 2, caption: 'Your voice, already prepared' },
+                  { n: 3, caption: 'Where the words actually happen' },
+                  { n: 4, caption: 'First words, already right' },
                 ].map(({ n, caption }) => (
                   <div key={`${dup}-${n}`} style={{ width: 420, flexShrink: 0 }}>
                     <img
