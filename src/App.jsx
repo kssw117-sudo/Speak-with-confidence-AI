@@ -263,7 +263,12 @@ function LiveDemo({ onTry }) {
 }
 
 export default function App() {
-  const [page, setPage] = useState(() => localStorage.getItem('swc_last_page') || 'home');
+  const [page, setPage] = useState(() => {
+    // Ссылки вида swc.plainwork.website/#roleplay открывают нужный раздел
+    const h = (window.location.hash || '').replace('#', '');
+    if (h && (PAGES.some(p => p.id === h) || h === 'progress')) return h;
+    return localStorage.getItem('swc_last_page') || 'home';
+  });
   const isPopStateRef = React.useRef(false);
   const [situation, setSituation] = useState(() => localStorage.getItem('swc_draft_situation') || '');
   const [userRole, setUserRole] = useState(() => localStorage.getItem('swc_draft_role') || '');
@@ -451,10 +456,23 @@ export default function App() {
     setTimerRunning(true);
   }
 
+  const [activeDays, setActiveDays] = useState(() => {
+    try { const d = JSON.parse(localStorage.getItem('swc_active_days') || '[]'); return Array.isArray(d) ? d : []; } catch (e) { return []; }
+  });
+  function markActiveDay() {
+    const today = new Date().toISOString().slice(0, 10);
+    setActiveDays(prev => {
+      if (prev.includes(today)) return prev;
+      const next = [...prev, today].slice(-400);
+      try { localStorage.setItem('swc_active_days', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
+  }
   function logPractice() {
     const next = practiceCount + 1;
     setPracticeCount(next);
     localStorage.setItem('swc_practice_count', String(next));
+    markActiveDay();
   }
 
   // Голосовая отработка — через встроенный в браузер Web Speech API,
@@ -555,7 +573,10 @@ export default function App() {
   const [rpLoading, setRpLoading] = useState(false);
   const [rpError, setRpError] = useState('');
   const [rpFeedback, setRpFeedback] = useState(null);
-  const RP_MAX_TURNS = 12;
+  const RP_MAX_TURNS_FULL = 12;
+  const RP_TRIAL_TURNS = 3;
+  const [rpTrialUsed, setRpTrialUsed] = useState(() => localStorage.getItem('swc_rp_trial_used') === 'true');
+  function markRpTrialUsed() { setRpTrialUsed(true); try { localStorage.setItem('swc_rp_trial_used', 'true'); } catch (e) {} }
   const [rpAutoSpeak, setRpAutoSpeak] = useState(() => localStorage.getItem('swc_rp_autospeak') === 'true');
   useEffect(() => { try { localStorage.setItem('swc_rp_autospeak', String(rpAutoSpeak)); } catch (e) {} }, [rpAutoSpeak]);
 
@@ -576,9 +597,62 @@ export default function App() {
   useEffect(() => { try { localStorage.setItem('swc_rp_partner', rpPartner); localStorage.setItem('swc_rp_scenario', rpScenario); localStorage.setItem('swc_rp_difficulty', rpDifficulty); } catch (e) {} }, [rpPartner, rpScenario, rpDifficulty]);
   useEffect(() => { try { localStorage.setItem('swc_iv_kind', ivKind); localStorage.setItem('swc_iv_target', ivTarget); localStorage.setItem('swc_iv_background', ivBackground); } catch (e) {} }, [ivKind, ivTarget, ivBackground]);
 
+  // Карточка результата: картинка 1200x630, которой можно поделиться или скачать
+  const [shareNote, setShareNote] = useState('');
+  async function shareResult({ score, what }) {
+    try {
+      const W = 1200, H = 630;
+      const c = document.createElement('canvas');
+      c.width = W; c.height = H;
+      const x = c.getContext('2d');
+      const g = x.createLinearGradient(0, 0, W, H);
+      g.addColorStop(0, '#EAF4FC'); g.addColorStop(1, '#FFFFFF');
+      x.fillStyle = g; x.fillRect(0, 0, W, H);
+      x.fillStyle = 'rgba(94,168,224,0.18)';
+      x.beginPath(); x.arc(1080, 90, 220, 0, Math.PI * 2); x.fill();
+      x.beginPath(); x.arc(120, 600, 160, 0, Math.PI * 2); x.fill();
+      const serif = "600 {S}px Fraunces, Georgia, 'Times New Roman', serif";
+      const sans = "{W} {S}px Inter, system-ui, -apple-system, 'Segoe UI', Arial, sans-serif";
+      x.fillStyle = SKY_DEEP; x.font = sans.replace('{W}', '600').replace('{S}', '26');
+      x.fillText('SPEAK WITH CONFIDENCE', 80, 96);
+      x.fillStyle = INK; x.font = serif.replace('{S}', '54');
+      x.fillText('I practiced before the real thing', 80, 196);
+      x.fillStyle = SKY_DEEP; x.font = serif.replace('{S}', '200');
+      const sc = String(Math.round(Number(score) || 0));
+      x.fillText(sc, 72, 420);
+      const sw = x.measureText(sc).width;
+      x.fillStyle = INK_SOFT; x.font = serif.replace('{S}', '64');
+      x.fillText('/100', 92 + sw, 420);
+      x.fillStyle = INK; x.font = sans.replace('{W}', '400').replace('{S}', '32');
+      let line = String(what || '').trim();
+      if (line.length > 58) line = line.slice(0, 56) + '…';
+      x.fillText(line.charAt(0).toUpperCase() + line.slice(1), 80, 486);
+      x.fillStyle = INK_SOFT; x.font = sans.replace('{W}', '400').replace('{S}', '26');
+      x.fillText('Rehearse your next hard conversation at swc.plainwork.website', 80, 566);
+      const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+      const file = new File([blob], 'my-practice-score.png', { type: 'image/png' });
+      const text = `I scored ${sc}/100 practicing a ${String(what || 'hard conversation')} with Speak With Confidence. https://swc.plainwork.website`;
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], text });
+        return;
+      }
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'my-practice-score.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      try { await navigator.clipboard.writeText(text); setShareNote('Image saved, and a ready caption is copied. Paste it into LinkedIn or your stories.'); }
+      catch (e) { setShareNote('Image saved. Post it on LinkedIn or in your stories.'); }
+      setTimeout(() => setShareNote(''), 6000);
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+      setShareNote('Could not create the image in this browser.');
+      setTimeout(() => setShareNote(''), 5000);
+    }
+  }
+
   function addHistory(entry) {
     setPracticeHistory(prev => {
-      const next = [{ ...entry, date: new Date().toISOString().slice(0, 10) }, ...prev].slice(0, 20);
+      const next = [{ ...entry, date: new Date().toISOString().slice(0, 10) }, ...prev].slice(0, 200);
       try { localStorage.setItem('swc_practice_history', JSON.stringify(next)); } catch (e) {}
       return next;
     });
@@ -589,16 +663,20 @@ export default function App() {
     const res = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...payload, outputLang, userRole, licenseCode: localStorage.getItem('swc_licenseCode') || '' }),
+      body: JSON.stringify({ ...payload, outputLang, userRole, licenseCode: unlocked ? (localStorage.getItem('swc_licenseCode') || '') : '', trial: !unlocked && String(payload.mode || '').startsWith('roleplay') }),
     });
     const data = await res.json().catch(() => ({}));
+    if (res.status === 403 && data.code === 'trial_used') {
+      markRpTrialUsed();
+      throw new Error(data.error || 'Your free role-play is used. Enter your access code to keep practicing.');
+    }
     if (res.status === 403 && data.code === 'invalid_code') {
       setUnlocked(false);
       localStorage.removeItem('swc_unlocked');
       throw new Error('Your access code was not accepted. Please enter it again.');
     }
     if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
-    setDailyCount(incrementDailyCount());
+    if (unlocked) setDailyCount(incrementDailyCount());
     return data;
   }
 
@@ -670,6 +748,7 @@ export default function App() {
     try {
       const data = await callPractice({ mode: 'roleplay-feedback', scenario: rpScenario, partner: rpPartner, messages: rpMessages });
       setRpFeedback(data);
+      if (!unlocked) markRpTrialUsed();
       logPractice();
       addHistory({ type: 'Role-play', title: rpPartner || rpScenario.slice(0, 60), score: data.score });
     } catch (e) { setRpError(e.message); } finally { setRpLoading(false); }
@@ -703,6 +782,9 @@ export default function App() {
 
   const rpUserTurns = rpMessages.filter(m => m.role === 'user').length;
   const practiceLimitReached = unlocked && dailyCount >= DAILY_LIMIT;
+  const rpTrial = !unlocked;
+  const RP_MAX_TURNS = rpTrial ? RP_TRIAL_TURNS : RP_MAX_TURNS_FULL;
+  const rpTrialActive = rpTrial && (rpMessages.length > 0 || Boolean(rpFeedback));
 
   // ===================== Голосовая практика =====================
   // «Повтори за мной» — бесплатно, без ИИ, распознавание речи в браузере.
@@ -792,6 +874,7 @@ export default function App() {
       setVpListening(false);
       if (finalText.trim()) {
         setVpResult(compareSpeech(vpPhrase, finalText));
+        try { localStorage.setItem('swc_vp_total', String((parseInt(localStorage.getItem('swc_vp_total') || '0', 10) || 0) + 1)); } catch (e) {}
         setVpDone(prev => {
           const n = prev + 1;
           try { localStorage.setItem('swc_vp_done', JSON.stringify({ date: new Date().toISOString().slice(0, 10), count: n })); } catch (e) {}
@@ -910,6 +993,52 @@ export default function App() {
   useEffect(() => () => { const st = fsRef.current; st.on = false; clearInterval(st.timer); try { st.rec && st.rec.stop(); } catch (e) {} }, []);
   useEffect(() => { if (page !== 'voice') { if (fsRef.current.on) fsStop(); if (vpListening) vpRecRef.current?.stop(); } }, [page]);
   const fmtTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+
+  // ===================== Бесплатный PDF за email =====================
+  const [leadEmail, setLeadEmail] = useState('');
+  const [leadState, setLeadState] = useState(() => localStorage.getItem('swc_lead_done') === 'true' ? 'done' : 'idle');
+  const [leadError, setLeadError] = useState('');
+  async function submitLead(e) {
+    if (e) e.preventDefault();
+    if (leadState === 'sending') return;
+    setLeadError(''); setLeadState('sending');
+    try {
+      const res = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'subscribe', email: leadEmail, source: 'home' }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+      setLeadState('done');
+      try { localStorage.setItem('swc_lead_done', 'true'); } catch (err) {}
+      window.open(data.pdf || '/salary-talk-phrasebook.pdf', '_blank');
+    } catch (err) { setLeadError(err.message); setLeadState('idle'); }
+  }
+
+  // ===================== Прогресс =====================
+  const progressStats = (() => {
+    const days = new Set(activeDays);
+    const dayKey = (d) => d.toISOString().slice(0, 10);
+    let streak = 0;
+    const cur = new Date();
+    if (!days.has(dayKey(cur))) cur.setUTCDate(cur.getUTCDate() - 1);
+    while (days.has(dayKey(cur))) { streak++; cur.setUTCDate(cur.getUTCDate() - 1); }
+    const scored = practiceHistory.filter(h => Number.isFinite(Number(h.score)));
+    const scores = scored.map(h => Number(h.score));
+    const recent = scores.slice(0, 10);
+    const avg = recent.length ? Math.round(recent.reduce((a, b) => a + b, 0) / recent.length) : null;
+    const best = scores.length ? Math.max(...scores) : null;
+    const byType = {};
+    scored.forEach(h => { const k = h.type || 'Practice'; (byType[k] = byType[k] || []).push(Number(h.score)); });
+    const types = Object.entries(byType).map(([k, v]) => ({ type: k, count: v.length, avg: Math.round(v.reduce((a, b) => a + b, 0) / v.length) })).sort((a, b) => b.count - a.count);
+    const last28 = [];
+    for (let i = 27; i >= 0; i--) { const d = new Date(); d.setUTCDate(d.getUTCDate() - i); const k = dayKey(d); last28.push({ k, on: days.has(k), today: i === 0 }); }
+    let vpTotal = 0;
+    try { vpTotal = parseInt(localStorage.getItem('swc_vp_total') || '0', 10) || 0; } catch (e) {}
+    const chart = scored.slice(0, 20).reverse();
+    const firstHalf = chart.slice(0, Math.floor(chart.length / 2)).map(h => Number(h.score));
+    const secondHalf = chart.slice(Math.floor(chart.length / 2)).map(h => Number(h.score));
+    const mean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
+    const trend = chart.length >= 4 ? Math.round(mean(secondHalf) - mean(firstHalf)) : null;
+    return { streak, avg, best, types, last28, vpTotal, chart, trend, activeTotal: days.size };
+  })();
 
   // Библиотека: вкладки по группам и категориям
   const [libraryGroup, setLibraryGroup] = useState('Work');
@@ -1063,6 +1192,10 @@ export default function App() {
             </div>
           </div>
 
+          <button onClick={() => { setPage('progress'); setAccountOpen(false); }}
+            style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: 'none', background: SKY, color: '#FFF', fontWeight: 600, fontSize: 13, cursor: 'pointer', marginBottom: 18 }}>
+            See my full progress &rarr;
+          </button>
           <p style={{ fontSize: 11, fontWeight: 700, color: INK, textTransform: 'uppercase', letterSpacing: '0.04em', margin: '0 0 10px' }}>
             Achievements ({unlockedCount}/{ACHIEVEMENTS.length})
           </p>
@@ -1309,6 +1442,38 @@ export default function App() {
             </div>
           </div>
 
+          {/* ---------- FREE PDF ---------- */}
+          <div style={{ maxWidth: 1000, margin: '0 auto', padding: '40px 24px 8px' }}>
+            <div style={{ borderRadius: 20, padding: '36px 32px', background: `linear-gradient(135deg, ${SKY_PALE}, #FFFFFF)`, border: '1px solid #CFE5F6', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 28, alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: SKY_DEEP, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Free PDF</div>
+                <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 28, lineHeight: 1.2, margin: '0 0 10px' }}>The Salary Talk Phrasebook</h2>
+                <p style={{ fontSize: 14, color: INK_SOFT, lineHeight: 1.6, margin: 0 }}>40 calm lines for asking for a raise, handling a "not yet" and leaving with a plan, plus five things that change the outcome.</p>
+              </div>
+              {leadState === 'done' ? (
+                <div style={{ padding: 20, borderRadius: 14, background: '#FFF', border: `1px solid ${LINE}` }}>
+                  <p style={{ fontSize: 14.5, fontWeight: 600, margin: '0 0 6px' }}>It's yours</p>
+                  <p style={{ fontSize: 13.5, color: INK_SOFT, margin: '0 0 14px' }}>If it didn't open, use the button below.</p>
+                  <a href="/salary-talk-phrasebook.pdf" target="_blank" rel="noopener" className="premium-btn"
+                    style={{ display: 'inline-block', padding: '12px 22px', borderRadius: 999, background: SKY, color: '#FFF', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Open the PDF</a>
+                </div>
+              ) : (
+                <form onSubmit={submitLead}>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <input type="email" required value={leadEmail} onChange={e => setLeadEmail(e.target.value)} placeholder="Your email"
+                      style={{ flex: '1 1 200px', padding: '13px 16px', borderRadius: 999, border: `1px solid ${LINE}`, fontSize: 14, background: '#FFF' }} />
+                    <button type="submit" disabled={leadState === 'sending'} className="premium-btn"
+                      style={{ padding: '13px 22px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontWeight: 600, fontSize: 14, opacity: leadState === 'sending' ? 0.6 : 1 }}>
+                      {leadState === 'sending' ? 'Sending...' : 'Get the PDF'}
+                    </button>
+                  </div>
+                  {leadError && <p style={{ color: '#D64545', fontSize: 12.5, margin: '8px 0 0' }}>{leadError}</p>}
+                  <p style={{ fontSize: 11.5, color: INK_SOFT, margin: '10px 0 0' }}>We may email you new phrase packs and tips, rarely. Unsubscribe anytime by replying "stop". See our <a href="/privacy.html" style={{ color: SKY_DEEP }}>privacy policy</a>.</p>
+                </form>
+              )}
+            </div>
+          </div>
+
           {/* ---------- FAQ ---------- */}
           <div style={{ maxWidth: 720, margin: '0 auto', padding: '64px 24px 90px' }}>
             <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 26, textAlign: 'center', marginBottom: 32 }}>
@@ -1442,7 +1607,7 @@ export default function App() {
         </div>
       )}
 
-      {(page === 'roleplay' || page === 'interview') && !unlocked && (
+      {((page === 'interview' && !unlocked) || (page === 'roleplay' && !unlocked && rpTrialUsed && !rpTrialActive)) && (
         <div key={'locked-' + page} className="page-fade" style={{ maxWidth: 640, margin: '0 auto', padding: '60px 24px' }}>
           <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 26, marginBottom: 8 }}>{page === 'roleplay' ? 'AI role-play' : 'Mock interview'}</h2>
           <p style={{ fontSize: 14, color: INK_SOFT, marginBottom: 24 }}>
@@ -1478,11 +1643,17 @@ export default function App() {
         </div>
       )}
 
-      {page === 'roleplay' && unlocked && (
+      {page === 'roleplay' && (unlocked || !rpTrialUsed || rpTrialActive) && (
         <div key="roleplay" className="page-fade" style={{ maxWidth: 680, margin: '0 auto', padding: '60px 24px' }}>
           <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 26, marginBottom: 8 }}>AI role-play</h2>
           <p style={{ fontSize: 14, color: INK_SOFT, marginBottom: 8 }}>Practice the conversation before it happens. The AI stays in character and pushes back like a real person.</p>
-          <p style={{ fontSize: 12.5, color: SKY_DEEP, marginBottom: 24 }}>{dailyCount} of {DAILY_LIMIT} AI replies today</p>
+          {rpTrial ? (
+            <div style={{ display: 'inline-block', fontSize: 12.5, color: SKY_DEEP, background: SKY_PALE, borderRadius: 999, padding: '6px 14px', marginBottom: 24, fontWeight: 600 }}>
+              Free try: {RP_TRIAL_TURNS} replies and your feedback, no code needed
+            </div>
+          ) : (
+            <p style={{ fontSize: 12.5, color: SKY_DEEP, marginBottom: 24 }}>{dailyCount} of {DAILY_LIMIT} AI replies today</p>
+          )}
 
           {rpMessages.length === 0 && !rpFeedback && (
             <>
@@ -1614,14 +1785,34 @@ export default function App() {
                   </div>
                 </div>
               )}
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <button onClick={startRoleplay} disabled={rpLoading || practiceLimitReached} className="premium-btn"
-                  style={{ padding: '12px 24px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontWeight: 600, fontSize: 14, opacity: (rpLoading || practiceLimitReached) ? 0.5 : 1 }}>Try again</button>
-                <button onClick={resetRoleplay} style={{ padding: '12px 20px', borderRadius: 999, border: `1px solid ${LINE}`, background: '#FFF', cursor: 'pointer', fontSize: 14 }}>New situation</button>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
+                <button onClick={() => shareResult({ score: rpFeedback.score, what: 'role-play: ' + (rpPartner || 'a hard conversation') })}
+                  style={{ padding: '12px 20px', borderRadius: 999, border: `1px solid ${LINE}`, background: '#FFF', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>Share my score</button>
+                {!rpTrial && (
+                  <>
+                    <button onClick={startRoleplay} disabled={rpLoading || practiceLimitReached} className="premium-btn"
+                      style={{ padding: '12px 24px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontWeight: 600, fontSize: 14, opacity: (rpLoading || practiceLimitReached) ? 0.5 : 1 }}>Try again</button>
+                    <button onClick={resetRoleplay} style={{ padding: '12px 20px', borderRadius: 999, border: `1px solid ${LINE}`, background: '#FFF', cursor: 'pointer', fontSize: 14 }}>New situation</button>
+                  </>
+                )}
               </div>
+              {rpTrial && (
+                <div style={{ padding: 24, borderRadius: 14, background: SKY_PALE }}>
+                  <p style={{ fontSize: 15, fontWeight: 600, margin: '0 0 6px' }}>That was your free role-play</p>
+                  <p style={{ fontSize: 13.5, color: INK_SOFT, margin: '0 0 16px', lineHeight: 1.55 }}>With an access code you get full conversations of up to {RP_MAX_TURNS_FULL} replies, mock interviews, AI voice feedback and up to {DAILY_LIMIT} AI replies a day.</p>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <input type="text" value={licenseCode} onChange={e => setLicenseCode(e.target.value)} placeholder="Enter your access code"
+                      style={{ flex: '1 1 200px', padding: '10px 14px', borderRadius: 10, border: `1px solid ${LINE}`, fontSize: 14 }} />
+                    <button onClick={handleUnlock} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: SKY, color: '#FFF', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>Unlock</button>
+                  </div>
+                  {licenseError && <p style={{ color: '#D64545', fontSize: 12.5, marginTop: 8 }}>{licenseError}</p>}
+                  <a href="/buy.html" className="premium-btn" style={{ display: 'inline-block', marginTop: 14, padding: '11px 22px', borderRadius: 999, background: SKY_DEEP, color: '#FFF', fontWeight: 600, fontSize: 13.5, textDecoration: 'none' }}>Get access</a>
+                </div>
+              )}
             </div>
           )}
           {rpError && <p style={{ color: '#D64545', fontSize: 13, marginTop: 12 }}>{rpError}</p>}
+          {shareNote && page === 'roleplay' && <p style={{ color: SKY_DEEP, fontSize: 13, marginTop: 12 }}>{shareNote}</p>}
         </div>
       )}
 
@@ -1732,6 +1923,8 @@ export default function App() {
                 ))}
               </div>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <button onClick={() => shareResult({ score: ivReview.overall, what: ivKind.toLowerCase() + ': ' + ivTarget })}
+                  style={{ padding: '12px 20px', borderRadius: 999, border: `1px solid ${LINE}`, background: '#FFF', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>Share my score</button>
                 <button onClick={startInterview} disabled={ivLoading || practiceLimitReached} className="premium-btn"
                   style={{ padding: '12px 24px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontWeight: 600, fontSize: 14, opacity: (ivLoading || practiceLimitReached) ? 0.5 : 1 }}>New questions, same interview</button>
                 <button onClick={resetInterview} style={{ padding: '12px 20px', borderRadius: 999, border: `1px solid ${LINE}`, background: '#FFF', cursor: 'pointer', fontSize: 14 }}>Different interview</button>
@@ -1739,6 +1932,7 @@ export default function App() {
             </div>
           )}
           {ivError && <p style={{ color: '#D64545', fontSize: 13, marginTop: 12 }}>{ivError}</p>}
+          {shareNote && page === 'interview' && <p style={{ color: SKY_DEEP, fontSize: 13, marginTop: 12 }}>{shareNote}</p>}
 
           {practiceHistory.length > 0 && (
             <div style={{ marginTop: 48 }}>
@@ -1928,13 +2122,124 @@ export default function App() {
                       )}
                     </div>
                   )}
-                  <button onClick={fsStart} className="premium-btn"
-                    style={{ marginTop: 14, padding: '12px 24px', borderRadius: 999, border: `1px solid ${LINE}`, cursor: 'pointer', background: '#FFF', color: INK, fontWeight: 600, fontSize: 13.5 }}>Record again</button>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 14 }}>
+                    <button onClick={fsStart} className="premium-btn"
+                      style={{ padding: '12px 24px', borderRadius: 999, border: `1px solid ${LINE}`, cursor: 'pointer', background: '#FFF', color: INK, fontWeight: 600, fontSize: 13.5 }}>Record again</button>
+                    {fsFeedback && (
+                      <button onClick={() => shareResult({ score: fsFeedback.score, what: 'speaking task: ' + fsTopic })}
+                        style={{ padding: '12px 20px', borderRadius: 999, border: `1px solid ${LINE}`, background: '#FFF', cursor: 'pointer', fontSize: 13.5, fontWeight: 600 }}>Share my score</button>
+                    )}
+                  </div>
+                  {shareNote && <p style={{ color: SKY_DEEP, fontSize: 13, marginTop: 12 }}>{shareNote}</p>}
                 </div>
               )}
               {fsError && <p style={{ color: '#D64545', fontSize: 13, marginTop: 12 }}>{fsError}</p>}
             </div>
           )}
+        </div>
+      )}
+
+      {page === 'progress' && (
+        <div key="progress" className="page-fade" style={{ maxWidth: 760, margin: '0 auto', padding: '60px 24px' }}>
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 26, marginBottom: 8 }}>Your progress</h2>
+          <p style={{ fontSize: 14, color: INK_SOFT, marginBottom: 28 }}>Every rehearsal makes the real conversation easier. Here is how far you have come.</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 28 }}>
+            {[
+              [String(progressStats.streak), progressStats.streak === 1 ? 'day in a row' : 'days in a row'],
+              [progressStats.avg === null ? '—' : String(progressStats.avg), 'average score, last 10'],
+              [progressStats.best === null ? '—' : String(progressStats.best), 'best score'],
+              [String(practiceCount), 'practice sessions'],
+              [String(progressStats.vpTotal), 'phrases said out loud'],
+              [String(savedPhrases.length), 'phrases saved'],
+            ].map(([v, l]) => (
+              <div key={l} className="premium-card" style={{ padding: '16px 18px', borderRadius: 14, background: '#FFF' }}>
+                <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 30, color: SKY_DEEP, lineHeight: 1.1 }}>{v}</div>
+                <div style={{ fontSize: 12, color: INK_SOFT, marginTop: 4 }}>{l}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="premium-card" style={{ padding: 22, borderRadius: 16, background: '#FFF', marginBottom: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: INK_SOFT, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Your scores over time</div>
+              {progressStats.trend !== null && (
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: progressStats.trend >= 0 ? '#2E8B57' : '#B3261E' }}>
+                  {progressStats.trend >= 0 ? `+${progressStats.trend}` : progressStats.trend} points vs your earlier sessions
+                </div>
+              )}
+            </div>
+            {progressStats.chart.length >= 2 ? (() => {
+              const W = 680, H = 200, P = 28;
+              const pts = progressStats.chart.map((h, i) => [P + i * (W - 2 * P) / (progressStats.chart.length - 1), H - P - (Number(h.score) / 100) * (H - 2 * P)]);
+              const path = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+              const area = path + ` L ${pts[pts.length - 1][0].toFixed(1)} ${H - P} L ${pts[0][0].toFixed(1)} ${H - P} Z`;
+              return (
+                <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block' }} role="img" aria-label="Scores over time">
+                  {[0, 50, 100].map(v => {
+                    const y = H - P - (v / 100) * (H - 2 * P);
+                    return <g key={v}><line x1={P} x2={W - P} y1={y} y2={y} stroke={LINE} strokeDasharray={v === 0 ? '' : '3 4'} /><text x={4} y={y + 4} fontSize="11" fill={INK_SOFT}>{v}</text></g>;
+                  })}
+                  <path d={area} fill={SKY_PALE} />
+                  <path d={path} fill="none" stroke={SKY} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+                  {pts.map((p, i) => (
+                    <g key={i}>
+                      <circle cx={p[0]} cy={p[1]} r="4.5" fill="#FFF" stroke={SKY_DEEP} strokeWidth="2" />
+                      <title>{`${progressStats.chart[i].date} · ${progressStats.chart[i].type}: ${progressStats.chart[i].score}`}</title>
+                    </g>
+                  ))}
+                </svg>
+              );
+            })() : (
+              <p style={{ fontSize: 13.5, color: INK_SOFT, margin: 0 }}>Finish two scored sessions (role-play, mock interview or voice feedback) to see your curve.</p>
+            )}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20, marginBottom: 20 }}>
+            <div className="premium-card" style={{ padding: 22, borderRadius: 16, background: '#FFF' }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: INK_SOFT, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 14 }}>Last 4 weeks</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
+                {progressStats.last28.map(d => (
+                  <div key={d.k} title={d.k} style={{ aspectRatio: '1', borderRadius: 6, background: d.on ? SKY : '#F1F3F5', outline: d.today ? `2px solid ${SKY_DEEP}` : 'none', outlineOffset: 1 }} />
+                ))}
+              </div>
+              <p style={{ fontSize: 12, color: INK_SOFT, margin: '12px 0 0' }}>{progressStats.activeTotal} {progressStats.activeTotal === 1 ? 'day' : 'days'} of practice in total</p>
+            </div>
+            <div className="premium-card" style={{ padding: 22, borderRadius: 16, background: '#FFF' }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: INK_SOFT, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 14 }}>By type of practice</div>
+              {progressStats.types.length ? progressStats.types.map(t => (
+                <div key={t.type} style={{ marginBottom: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 5 }}>
+                    <span>{t.type} <span style={{ color: INK_SOFT }}>&middot; {t.count}</span></span>
+                    <strong style={{ color: SKY_DEEP }}>{t.avg}</strong>
+                  </div>
+                  <div style={{ height: 6, borderRadius: 3, background: '#F1F3F5' }}>
+                    <div style={{ width: `${t.avg}%`, height: '100%', borderRadius: 3, background: SKY }} />
+                  </div>
+                </div>
+              )) : <p style={{ fontSize: 13.5, color: INK_SOFT, margin: 0 }}>No scored sessions yet.</p>}
+            </div>
+          </div>
+
+          {practiceHistory.length > 0 ? (
+            <div className="premium-card" style={{ padding: 22, borderRadius: 16, background: '#FFF' }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: INK_SOFT, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>All sessions</div>
+              <div style={{ display: 'grid', gap: 8 }}>
+                {practiceHistory.slice(0, 30).map((h, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13, padding: '10px 14px', borderRadius: 10, border: `1px solid ${LINE}` }}>
+                    <span style={{ color: INK_SOFT }}>{h.date} &middot; {h.type} &middot; <span style={{ color: INK }}>{h.title}</span></span>
+                    <strong style={{ color: SKY_DEEP }}>{h.score}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div style={{ padding: 24, borderRadius: 14, background: SKY_PALE, textAlign: 'center' }}>
+              <p style={{ fontSize: 14.5, fontWeight: 600, margin: '0 0 12px' }}>Your first session takes five minutes</p>
+              <button onClick={() => setPage('roleplay')} className="premium-btn"
+                style={{ padding: '12px 24px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontWeight: 600, fontSize: 14 }}>Start a role-play &rarr;</button>
+            </div>
+          )}
+          <p style={{ fontSize: 12, color: INK_SOFT, marginTop: 20 }}>Your progress is stored only in this browser.</p>
         </div>
       )}
 
@@ -2144,6 +2449,7 @@ export default function App() {
             Thanks to Skyeng for the idea behind voice practice &#128153;
           </p>
           <p style={{ fontSize: 12, textAlign: 'center', marginTop: 14 }}>
+<a href="/phrases/" style={{ color: SKY_DEEP, fontWeight: 600, marginRight: 18 }}>Free phrase guides</a>
             <a href="https://plainwork.website/" target="_blank" rel="noopener noreferrer" style={{ color: SKY_DEEP, fontWeight: 600 }}>
               More useful tools at Plainwork &rarr;
             </a>
