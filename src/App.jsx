@@ -195,6 +195,73 @@ function incrementDailyCount() {
   return record.count;
 }
 
+// Живое демо ролевой игры на главной: реплики появляются по очереди, когда блок виден
+const DEMO_CHAT = [
+  { role: 'ai', text: "Budgets are tight this year. Why should we raise your salary now?" },
+  { role: 'me', text: "Because I led the client migration that kept our two largest accounts." },
+  { role: 'ai', text: "Everyone worked hard this year. What makes your case different?" },
+  { role: 'me', text: "The numbers. That project protected around 400,000 dollars in yearly revenue." },
+  { role: 'ai', text: "Fair point. What number do you have in mind?" },
+  { role: 'me', text: "Based on my results and market data, I'm asking for a 12 percent increase." },
+];
+
+function LiveDemo({ onTry }) {
+  const [shown, setShown] = React.useState(0);
+  const [typing, setTyping] = React.useState(false);
+  const [visible, setVisible] = React.useState(false);
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el || !('IntersectionObserver' in window)) { setVisible(true); return; }
+    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.3 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  React.useEffect(() => {
+    if (!visible) return;
+    if (shown >= DEMO_CHAT.length) {
+      const t = setTimeout(() => setShown(0), 5000);
+      return () => clearTimeout(t);
+    }
+    const next = DEMO_CHAT[shown];
+    setTyping(next.role === 'ai');
+    const t = setTimeout(() => { setTyping(false); setShown(n => n + 1); }, shown === 0 ? 700 : next.role === 'ai' ? 1700 : 1300);
+    return () => clearTimeout(t);
+  }, [visible, shown]);
+  return (
+    <div ref={ref} style={{ background: '#FAFBFC', borderRadius: 20, border: `1px solid ${LINE}`, padding: '22px 20px', minHeight: 430, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 14, borderBottom: `1px solid ${LINE}`, marginBottom: 16 }}>
+        <div style={{ width: 34, height: 34, borderRadius: '50%', background: SKY_PALE, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15 }}>{'\u{1F454}'}</div>
+        <div>
+          <div style={{ fontSize: 13.5, fontWeight: 600 }}>Your manager</div>
+          <div style={{ fontSize: 11.5, color: INK_SOFT }}>AI role-play &middot; Tough mode</div>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gap: 10, alignContent: 'start', flex: 1 }}>
+        {DEMO_CHAT.slice(0, shown).map((m, i) => (
+          <div key={i} className="result-card-anim" style={{
+            justifySelf: m.role === 'me' ? 'end' : 'start', maxWidth: '85%',
+            background: m.role === 'me' ? SKY : '#FFF', color: m.role === 'me' ? '#FFF' : INK,
+            border: m.role === 'me' ? 'none' : `1px solid ${LINE}`,
+            padding: '10px 14px', borderRadius: m.role === 'me' ? '14px 14px 4px 14px' : '14px 14px 14px 4px', fontSize: 13.5, lineHeight: 1.5,
+          }}>{m.text}</div>
+        ))}
+        {typing && (
+          <div className="demo-typing" style={{ justifySelf: 'start', background: '#FFF', border: `1px solid ${LINE}`, borderRadius: '14px 14px 14px 4px', padding: '12px 16px', display: 'flex', gap: 5 }}>
+            <span /><span /><span />
+          </div>
+        )}
+      </div>
+      {shown >= DEMO_CHAT.length && (
+        <div className="result-card-anim" style={{ marginTop: 14, padding: '12px 14px', borderRadius: 12, background: SKY_PALE, fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+          <span><strong style={{ color: SKY_DEEP }}>Score 86/100.</strong> Clear ask, backed by numbers.</span>
+          <button onClick={onTry} style={{ background: 'none', border: 'none', color: SKY_DEEP, fontWeight: 600, cursor: 'pointer', fontSize: 13, whiteSpace: 'nowrap' }}>Try it &rarr;</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function App() {
   const [page, setPage] = useState(() => localStorage.getItem('swc_last_page') || 'home');
   const isPopStateRef = React.useRef(false);
@@ -882,6 +949,10 @@ export default function App() {
         textarea, input, select { font-family: inherit; }
         .ready-img { transition: transform 0.6s ease; }
         .ready-banner:hover .ready-img { transform: scale(1.04); }
+        .demo-typing span { width: 7px; height: 7px; border-radius: 50%; background: #9AA8B5; animation: demoDot 1.2s infinite ease-in-out; }
+        .demo-typing span:nth-child(2) { animation-delay: 0.15s; }
+        .demo-typing span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes demoDot { 0%, 60%, 100% { opacity: 0.3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
         @keyframes statPop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .stat-pop { animation: statPop 0.5s cubic-bezier(0.22,1,0.36,1) both; }
         @keyframes marqueeScroll { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
@@ -940,16 +1011,16 @@ export default function App() {
             </button>
           </div>
         </div>
-        <nav className="desktop-nav" style={{ gap: 10, justifyContent: 'center', flexWrap: 'wrap', padding: '14px 16px' }}>
+        <nav className="desktop-nav" style={{ gap: 8, justifyContent: 'center', flexWrap: 'wrap', padding: '14px 16px' }}>
           {PAGES.slice(1).map(p => (
             <button key={p.id} onClick={() => setPage(p.id)} className="premium-btn"
               style={{
                 background: page === p.id ? SKY : '#FFF',
                 border: `1.5px solid ${page === p.id ? SKY : LINE}`,
-                cursor: 'pointer', fontSize: 14,
+                cursor: 'pointer', fontSize: 13.5,
                 color: page === p.id ? '#FFF' : INK,
                 fontWeight: 600,
-                padding: '11px 20px',
+                padding: '9px 15px',
                 borderRadius: 999,
                 whiteSpace: 'nowrap',
                 display: 'flex', alignItems: 'center', gap: 8,
@@ -1118,6 +1189,27 @@ export default function App() {
             </div>
           </div>
 
+          {/* ---------- HOW IT WORKS ---------- */}
+          <div style={{ maxWidth: 1000, margin: '0 auto', padding: '64px 24px 8px' }}>
+            <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 34, textAlign: 'center', marginBottom: 10 }}>How it works</h2>
+            <p style={{ textAlign: 'center', color: INK_SOFT, fontSize: 14, marginBottom: 44 }}>From nervous to ready in one evening</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
+              {[
+                { n: '1', title: 'Describe the situation', body: 'A raise, a tough client, an interview. Say who you will talk to and what you want to get.', page: 'scenario', cta: 'Prepare talking points' },
+                { n: '2', title: 'Practice out loud', body: 'The AI plays the other person and pushes back. Or repeat strong phrases after a native voice.', page: 'roleplay', cta: 'Try a role-play' },
+                { n: '3', title: 'Walk in ready', body: 'Get a score, see what to fix and keep the best lines in your phrasebook for the real moment.', page: 'phrasebook', cta: 'Open my phrasebook' },
+              ].map(st => (
+                <div key={st.n} className="premium-card" onClick={() => setPage(st.page)}
+                  style={{ padding: 26, borderRadius: 16, background: '#FFF', cursor: 'pointer', position: 'relative' }}>
+                  <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 44, color: SKY_PALE, lineHeight: 1, marginBottom: 6, WebkitTextStroke: `1.5px ${SKY}` }}>{st.n}</div>
+                  <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 8 }}>{st.title}</div>
+                  <div style={{ fontSize: 13.5, color: INK_SOFT, lineHeight: 1.55, marginBottom: 14 }}>{st.body}</div>
+                  <div style={{ fontSize: 13, color: SKY_DEEP, fontWeight: 600 }}>{st.cta} &rarr;</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* ---------- FEATURES GRID ---------- */}
           <div style={{ maxWidth: 1000, margin: '0 auto', padding: '64px 24px' }}>
             <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 34, textAlign: 'center', marginBottom: 10 }}>
@@ -1137,6 +1229,29 @@ export default function App() {
                   <div style={{ fontSize: 12.5, color: INK_SOFT, lineHeight: 1.5 }}>{f.body}</div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* ---------- LIVE DEMO ---------- */}
+          <div style={{ maxWidth: 1000, margin: '0 auto', padding: '8px 24px 64px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 40, alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: SKY_DEEP, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>See it in action</div>
+                <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 32, lineHeight: 1.2, margin: '0 0 14px' }}>Rehearse with someone who pushes back</h2>
+                <p style={{ fontSize: 14.5, color: INK_SOFT, lineHeight: 1.6, margin: '0 0 22px' }}>
+                  The AI stays in character as your manager, client or interviewer. It asks the awkward follow-up questions, so the real conversation holds no surprises.
+                </p>
+                <ul style={{ margin: '0 0 26px', paddingLeft: 18, fontSize: 14, lineHeight: 1.8 }}>
+                  <li>Type or speak your answers</li>
+                  <li>Friendly, realistic or tough mode</li>
+                  <li>A score and stronger versions of your lines at the end</li>
+                </ul>
+                <button onClick={() => setPage('roleplay')} className="premium-btn"
+                  style={{ padding: '13px 26px', borderRadius: 999, border: 'none', cursor: 'pointer', background: SKY, color: '#FFF', fontSize: 14, fontWeight: 600 }}>
+                  Start your own role-play &rarr;
+                </button>
+              </div>
+              <LiveDemo onTry={() => setPage('roleplay')} />
             </div>
           </div>
 
